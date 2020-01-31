@@ -2,6 +2,7 @@
 # An entity that will be a mapped typed
 type Author {
   name: String!
+  summary: AuthorSummary!
 }
 
 # A DTO that is just some fields
@@ -15,7 +16,8 @@ schema {
 }
 
 type Query {
-  authors: [Author!]!
+  authors(id: ID): [Author!]!
   authorSummaries: [AuthorSummary!]!
 }
+
 

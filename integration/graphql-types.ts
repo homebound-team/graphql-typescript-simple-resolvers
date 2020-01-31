@@ -7,17 +7,24 @@ export interface Resolvers {
 }
 
 export interface QueryResolvers {
-  authors(root: {}, args: [], ctx: Context): MaybePromise<AuthorId[]>;
-  authorSummaries(root: {}, args: [], ctx: Context): MaybePromise<AuthorSummary[]>;
+  authors(
+    root: {},
+    args: {
+      id: string | null;
+    },
+    ctx: Context,
+  ): MaybePromise<AuthorId[]>;
+  authorSummaries(root: {}, args: {}, ctx: Context): MaybePromise<AuthorSummary[]>;
 }
 
 export interface AuthorResolvers {
-  name(root: AuthorId, args: [], ctx: Context): MaybePromise<string>;
+  name(root: AuthorId, args: {}, ctx: Context): MaybePromise<string>;
+  summary(root: AuthorId, args: {}, ctx: Context): MaybePromise<AuthorSummary>;
 }
 
 export interface AuthorSummaryResolvers {
-  numberOfBooks(root: AuthorSummary, args: [], ctx: Context): MaybePromise<number>;
-  amountOfSales(root: AuthorSummary, args: [], ctx: Context): MaybePromise<number | null>;
+  numberOfBooks(root: AuthorSummary, args: {}, ctx: Context): MaybePromise<number>;
+  amountOfSales(root: AuthorSummary, args: {}, ctx: Context): MaybePromise<number | null>;
 }
 
 export interface AuthorSummary {

@@ -42,8 +42,10 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
       export interface ${type.name}Resolvers {
         ${Object.values(type.getFields()).map(f => {
           const root = mapObjectType(config, type);
-          const args = arrayOf(f.args);
-          const result = toTypeScriptType(config, f.type);
+          const args = code`{
+            ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
+          }`;
+          const result = mapType(config, f.type);
           return code`${f.name}(root: ${root}, args: ${args}, ctx: ${ctx}): MaybePromise<${result}>;`;
         })}
       }
@@ -55,7 +57,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     chunks.push(code`
       export interface ${type.name} {
         ${Object.values(type.getFields()).map(f => {
-          return code`${f.name}: ${toTypeScriptType(config, f.type)};`;
+          return code`${f.name}: ${mapType(config, f.type)};`;
         })}
       }
     `);
@@ -77,12 +79,12 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
 };
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
-function toTypeScriptType(config: Config, type: GraphQLOutputType): any {
+function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectType): any {
   if (type instanceof GraphQLNonNull) {
-    const sub = toTypeScriptType(config, type.ofType);
+    const sub = mapType(config, type.ofType);
     return stripNullable(sub);
   } else if (type instanceof GraphQLList) {
-    const sub = toTypeScriptType(config, type.ofType);
+    const sub = mapType(config, type.ofType);
     return nullableOf(code`${sub}[]`);
   } else if (type instanceof GraphQLObjectType) {
     return nullableOf(mapObjectType(config, type));
@@ -105,6 +107,8 @@ function mapScalarType(type: GraphQLScalarType): string {
     return "string";
   } else if (type.name === "Int") {
     return "number";
+  } else if (type.name === "ID") {
+    return "string";
   } else {
     return type.name.toString().toLowerCase();
   }
