@@ -1,5 +1,5 @@
-import { GraphQLScalarType, GraphQLResolveInfo } from "graphql";
 import { Context, AuthorId, Popularity } from "./entities";
+import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
 export interface Resolvers {
   Query: QueryResolvers;
@@ -11,35 +11,33 @@ export interface Resolvers {
 }
 
 export interface QueryResolvers {
-  authors(root: {}, args: QueryAuthorsArgs, ctx: Context, info: GraphQLResolveInfo): MaybePromise<AuthorId[]>;
-  authorSummaries(root: {}, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<AuthorSummary[]>;
+  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
 }
 
 export interface AuthorResolvers {
-  name(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<string>;
-  summary(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<AuthorSummary>;
-  popularity(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Popularity>;
-  working(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Working | null>;
-  birthday(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Date | null>;
+  name: Resolver<AuthorId, {}, string>;
+  summary: Resolver<AuthorId, {}, AuthorSummary>;
+  popularity: Resolver<AuthorId, {}, Popularity>;
+  working: Resolver<AuthorId, {}, Working | null>;
+  birthday: Resolver<AuthorId, {}, Date | null>;
 }
 
 export interface MutationResolvers {
-  saveAuthor(
-    root: {},
-    args: MutationSaveAuthorArgs,
-    ctx: Context,
-    info: GraphQLResolveInfo,
-  ): MaybePromise<SaveAuthorResult>;
+  saveAuthor: Resolver<{}, MutationSaveAuthorArgs, SaveAuthorResult>;
 }
 
 export interface AuthorSummaryResolvers {
-  numberOfBooks(root: AuthorSummary, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<number>;
-  amountOfSales(root: AuthorSummary, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<number | null>;
+  numberOfBooks: Resolver<AuthorSummary, {}, number>;
+  amountOfSales: Resolver<AuthorSummary, {}, number | null>;
 }
 
 export interface SaveAuthorResultResolvers {
-  author(root: SaveAuthorResult, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<AuthorId>;
+  author: Resolver<SaveAuthorResult, {}, AuthorId>;
 }
+
+type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
+
 export interface QueryAuthorsArgs {
   id: string | null;
 }
@@ -58,10 +56,10 @@ export interface SaveAuthorResult {
 export interface AuthorInput {
   name: string | null;
 }
+
 export { Popularity } from "./entities";
+
 export enum Working {
   Yes = "YES",
   No = "NO",
 }
-
-type MaybePromise<T> = T | Promise<T>;

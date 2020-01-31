@@ -51,9 +51,11 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
       ${typesThatMayHaveResolvers.map(o => {
         return `${o.name}?: ${o.name}Resolvers;`;
       })} 
-      ${scalars.filter(s => !builtInScalars.includes(s.name)).map(s => {
-        return code`${s.name}: ${GraphQLScalarTypeSymbol};`;
-      })}
+      ${scalars
+        .filter(s => !builtInScalars.includes(s.name))
+        .map(s => {
+          return code`${s.name}: ${GraphQLScalarTypeSymbol};`;
+        })}
     }
   `;
   chunks.push(resolvers);
@@ -69,18 +71,23 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
           const argsName = `${type.name}${upperCaseFirst(f.name)}Args`;
           const args = f.args.length > 0 ? argsName : "{}";
           if (f.args.length > 0) {
-            argDefs.push(code`export interface ${argsName} {
-              ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
-            }`);
+            argDefs.push(code`
+              export interface ${argsName} {
+                ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
+              }`);
           }
 
           const root = mapObjectType(config, type);
           const result = mapType(config, f.type);
-          return code`${f.name}(root: ${root}, args: ${args}, ctx: ${ctx}, info: ${GraphQLResolveInfo}): MaybePromise<${result}>;`;
+          return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
         })}
       }
     `);
   });
+
+  chunks.push(code`
+    type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
+  `);
 
   argDefs.forEach(a => chunks.push(a));
 
@@ -122,11 +129,11 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
        `);
       } else {
         const [path, symbol] = mappedEnum.split("#");
-        chunks.push(code`export { ${symbol} } from "${path}";`);
+        chunks.push(code`
+          export { ${symbol} } from "${path}";
+        `);
       }
     });
-
-  chunks.push(maybePromise);
 
   const content = await code`${chunks}`.toStringWithImports();
   return { content } as PluginOutput;
@@ -226,7 +233,3 @@ type Config = {
   mappers: Record<string, string>;
   enumValues: Record<string, string>;
 };
-
-const maybePromise = code`
-  type MaybePromise<T> = T | Promise<T>
-`;
