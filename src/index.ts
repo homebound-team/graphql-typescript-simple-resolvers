@@ -14,6 +14,8 @@ import { code, Code, imp } from "ts-poet";
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import PluginOutput = Types.PluginOutput;
 
+const builtInScalars = ["Int", "Boolean", "String", "ID", "Float"];
+const GraphQLScalarTypeSymbol = imp("GraphQLScalarType@graphql");
 const GraphQLResolveInfo = imp("GraphQLResolveInfo@graphql");
 
 /**
@@ -38,6 +40,8 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     .filter(isObjectType)
     .filter(t => optionalResolver(config, t));
 
+  const scalars = Object.values(schema.getTypeMap()).filter(isScalarType);
+
   // Make the top-level Resolvers interface
   const resolvers = code`
     export interface Resolvers {
@@ -47,6 +51,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
       ${typesThatMayHaveResolvers.map(o => {
         return `${o.name}?: ${o.name}Resolvers;`;
       })} 
+      ${scalars.filter(s => !builtInScalars.includes(s.name)).map(s => {
+        return code`${s.name}: ${GraphQLScalarTypeSymbol};`;
+      })}
     }
   `;
   chunks.push(resolvers);
@@ -162,7 +169,7 @@ function mapScalarType(type: GraphQLScalarType): string {
   } else if (type.name === "Int" || type.name === "Float") {
     return "number";
   } else {
-    return type.name.toString().toLowerCase();
+    return type.name.toString();
   }
 }
 
@@ -199,6 +206,10 @@ function isInputObjectType(t: GraphQLNamedType): t is GraphQLInputObjectType {
 
 function isEnumType(t: GraphQLNamedType): t is GraphQLEnumType {
   return t instanceof GraphQLEnumType;
+}
+
+function isScalarType(t: GraphQLNamedType): t is GraphQLScalarType {
+  return t instanceof GraphQLScalarType;
 }
 
 function needsResolver(config: Config, t: GraphQLObjectType): boolean {

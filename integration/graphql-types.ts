@@ -1,5 +1,5 @@
+import { GraphQLScalarType, GraphQLResolveInfo } from "graphql";
 import { Context, AuthorId, Popularity } from "./entities";
-import { GraphQLResolveInfo } from "graphql";
 
 export interface Resolvers {
   Query: QueryResolvers;
@@ -7,6 +7,7 @@ export interface Resolvers {
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
+  Date: GraphQLScalarType;
 }
 
 export interface QueryResolvers {
@@ -19,6 +20,7 @@ export interface AuthorResolvers {
   summary(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<AuthorSummary>;
   popularity(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Popularity>;
   working(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Working | null>;
+  birthday(root: AuthorId, args: {}, ctx: Context, info: GraphQLResolveInfo): MaybePromise<Date | null>;
 }
 
 export interface MutationResolvers {

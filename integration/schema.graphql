@@ -4,6 +4,7 @@ type Author {
   summary: AuthorSummary!
   popularity: Popularity!
   working: Working
+  birthday: Date
 }
 
 # A DTO that is just some fields
@@ -43,3 +44,5 @@ enum Working {
   YES
   NO
 }
+
+scalar Date
