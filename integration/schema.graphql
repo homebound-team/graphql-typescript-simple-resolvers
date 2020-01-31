@@ -1,0 +1,12 @@
+
+type Author {
+  name: String!
+}
+
+schema {
+  query: Query
+}
+
+type Query {
+  authors: [Author!]!
+}

@@ -1,0 +1,39 @@
+overwrite: true
+schema: "./integration/schema.graphql"
+documents: null
+generates:
+  integration/graphql-types.ts:
+    config:
+      contextType: "@src/context#Context"
+      noSchemaStitching: true
+      avoidOptionals: true
+      mappers:
+        Activity: "@src/entities#ActivityRef"
+        Client: "@src/entities#ClientRef"
+        CalendarInterval: "@src/resolvers/entities/calendarIntervalResolvers#CalendarIntervalRef"
+        Market: "@src/entities#MarketRef"
+        Address: "@src/entities#AddressRef"
+        InternalUser: "@src/entities#InternalUserRef"
+        ProjectRoleDetail: "@src/entities#ProjectRole"
+        ActivityPlanningStateDetail: "@src/entities#ActivityPlanningState"
+        ActivityTypeDetail: "@src/entities#ActivityType"
+        ActivityResponsibilityDetail: "@src/entities#ActivityResponsibility"
+        Project: "@src/entities#ProjectRef"
+        ProjectStageStatusDetail: "@src/entities#ProjectStageStatus"
+        ProjectStage: "@src/entities#ProjectStageRef"
+        StageDetail: "@src/entities#Stage"
+        Task: "@src/entities#TaskRef"
+        TaskTypeDetail: "@src/entities#TaskType"
+        TaskStatusDetail: "@src/entities#TaskStatus"
+        Unit: "@src/entities#UnitRef"
+      enumValues:
+        ProjectRole: "@src/entities#ProjectRole"
+        ActivityPlanningState: "@src/entities#ActivityPlanningState"
+        ActivityType: "@src/entities#ActivityType"
+        ActivityResponsibility: "@src/entities#ActivityResponsibility"
+        ProjectStageStatus: "@src/entities#ProjectStageStatus"
+        Stage: "@src/entities#Stage"
+        TaskType: "@src/entities#TaskType"
+        TaskStatus: "@src/entities#TaskStatus"
+    plugins:
+      - ./build/index.js
