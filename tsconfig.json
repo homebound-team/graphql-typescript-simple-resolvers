@@ -8,5 +8,6 @@
     "skipLibCheck": true,
     "outDir": "build"
   },
-  "includes": ["src"]
+  "includes": ["src"],
+  "exclude":["integration"]
 }

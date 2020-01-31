@@ -1,6 +1,13 @@
 
+# An entity that will be a mapped typed
 type Author {
   name: String!
+}
+
+# A DTO that is just some fields
+type AuthorSummary {
+  numberOfBooks: Int!
+  amountOfSales: Int
 }
 
 schema {
@@ -9,4 +16,6 @@ schema {
 
 type Query {
   authors: [Author!]!
+  authorSummaries: [AuthorSummary!]!
 }
+
