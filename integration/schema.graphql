@@ -1,18 +1,20 @@
-
 # An entity that will be a mapped typed
 type Author {
   name: String!
   summary: AuthorSummary!
+  popularity: Popularity!
+  working: Working
 }
 
 # A DTO that is just some fields
 type AuthorSummary {
   numberOfBooks: Int!
-  amountOfSales: Int
+  amountOfSales: Float
 }
 
 schema {
   query: Query
+  mutation: Mutation
 }
 
 type Query {
@@ -20,4 +22,24 @@ type Query {
   authorSummaries: [AuthorSummary!]!
 }
 
+type Mutation {
+  saveAuthor(input: AuthorInput!): SaveAuthorResult!
+}
 
+type SaveAuthorResult {
+  author: Author!
+}
+
+input AuthorInput {
+  name: String
+}
+
+enum Popularity {
+  Low
+  High
+}
+
+enum Working {
+  YES
+  NO
+}

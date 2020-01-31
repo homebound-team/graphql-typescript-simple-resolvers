@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^1.12.1",
+    "change-case": "^4.1.1",
     "ts-poet": "^3.0.0"
   },
   "devDependencies": {

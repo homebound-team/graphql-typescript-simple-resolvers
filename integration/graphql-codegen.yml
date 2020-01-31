@@ -8,6 +8,6 @@ generates:
       mappers:
         Author: "./entities#AuthorId"
       enumValues:
-        ProjectRole: "@src/entities#ProjectRole"
+        Popularity: "./entities#Popularity"
     plugins:
       - ./build/index.js

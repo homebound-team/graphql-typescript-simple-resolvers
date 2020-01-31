@@ -1,4 +1,5 @@
 import {
+  GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNamedType,
@@ -7,10 +8,25 @@ import {
   GraphQLOutputType,
   GraphQLScalarType,
 } from "graphql";
-import { arrayOf, code, Code, imp } from "ts-poet";
+import { pascalCase } from "change-case";
+import { upperCaseFirst } from "upper-case-first";
+import { code, Code, imp } from "ts-poet";
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import PluginOutput = Types.PluginOutput;
 
+const GraphQLResolveInfo = imp("GraphQLResolveInfo@graphql");
+
+/**
+ * Generates Resolver type definitions.
+ *
+ * In theory the output is generally the same as the `typescript-resolvers` plugin, except ours
+ * is:
+ *
+ * a) generally much simpler (i.e. it is a dedicted-to-resolvers plugin and so doesn't have to
+ * monkey-patch the out-of-the-box `tyepscript` plugin types with `Omit`s for every mpped type , and
+ *
+ * b) has better support for avoidOptionals, we only require resolvers for non-mapped types.
+ */
 export const plugin: PluginFunction<Config> = async (schema, documents, config) => {
   const chunks: Code[] = [];
 
@@ -35,22 +51,31 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
   `;
   chunks.push(resolvers);
 
+  const argDefs: Code[] = [];
+
   // Make each resolver for any output type, whether its required or optional
   const ctx = toImp(config.contextType);
   [...typesThatNeedResolvers, ...typesThatMayHaveResolvers].forEach(type => {
     chunks.push(code`
       export interface ${type.name}Resolvers {
         ${Object.values(type.getFields()).map(f => {
+          const argsName = `${type.name}${upperCaseFirst(f.name)}Args`;
+          const args = f.args.length > 0 ? argsName : "{}";
+          if (f.args.length > 0) {
+            argDefs.push(code`export interface ${argsName} {
+              ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
+            }`);
+          }
+
           const root = mapObjectType(config, type);
-          const args = code`{
-            ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
-          }`;
           const result = mapType(config, f.type);
-          return code`${f.name}(root: ${root}, args: ${args}, ctx: ${ctx}): MaybePromise<${result}>;`;
+          return code`${f.name}(root: ${root}, args: ${args}, ctx: ${ctx}, info: ${GraphQLResolveInfo}): MaybePromise<${result}>;`;
         })}
       }
     `);
   });
+
+  argDefs.forEach(a => chunks.push(a));
 
   // For the output types with optional resolvers, make DTOs for them
   typesThatMayHaveResolvers.forEach(type => {
@@ -63,13 +88,35 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     `);
   });
 
+  // Input types
   Object.values(schema.getTypeMap())
-    .filter(t => t instanceof GraphQLInputObjectType)
+    .filter(isInputObjectType)
     .forEach(type => {
       chunks.push(code`
-      export interface ${type.name} {
-      }
+        export interface ${type.name} {
+          ${Object.values(type.getFields()).map(f => {
+            return code`${f.name}: ${mapType(config, f.type)};`;
+          })}
+        }
     `);
+    });
+
+  // Enums
+  Object.values(schema.getTypeMap())
+    .filter(isEnumType)
+    .filter(t => !t.name.startsWith("__"))
+    .forEach(type => {
+      const mappedEnum = config.enumValues[type.name];
+      if (!mappedEnum) {
+        chunks.push(code`
+          export enum ${type.name} {
+            ${type.getValues().map(v => `${pascalCase(v.value)} = "${v.value}",`)}
+          }
+       `);
+      } else {
+        const [path, symbol] = mappedEnum.split("#");
+        chunks.push(code`export { ${symbol} } from "${path}";`);
+      }
     });
 
   chunks.push(maybePromise);
@@ -84,12 +131,15 @@ function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectTyp
     const sub = mapType(config, type.ofType);
     return stripNullable(sub);
   } else if (type instanceof GraphQLList) {
-    const sub = mapType(config, type.ofType);
-    return nullableOf(code`${sub}[]`);
+    return nullableOf(code`${mapType(config, type.ofType)}[]`);
   } else if (type instanceof GraphQLObjectType) {
     return nullableOf(mapObjectType(config, type));
   } else if (type instanceof GraphQLScalarType) {
     return nullableOf(mapScalarType(type));
+  } else if (type instanceof GraphQLEnumType) {
+    return nullableOf(mapEnumType(config, type));
+  } else if (type instanceof GraphQLInputObjectType) {
+    return nullableOf(type.name);
   } else {
     throw new Error(`Unsupported type ${type}`);
   }
@@ -102,13 +152,15 @@ function mapObjectType(config: Config, type: GraphQLObjectType): any {
   return toImp(config.mappers[type.name]) || type.name;
 }
 
+function mapEnumType(config: Config, type: GraphQLEnumType): any {
+  return toImp(config.enumValues[type.name]) || type.name;
+}
+
 function mapScalarType(type: GraphQLScalarType): string {
-  if (type.name === "String") {
+  if (type.name === "String" || type.name === "ID") {
     return "string";
-  } else if (type.name === "Int") {
+  } else if (type.name === "Int" || type.name === "Float") {
     return "number";
-  } else if (type.name === "ID") {
-    return "string";
   } else {
     return type.name.toString().toLowerCase();
   }
@@ -139,6 +191,14 @@ function toImp(spec: string | undefined): unknown {
 
 function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {
   return t instanceof GraphQLObjectType;
+}
+
+function isInputObjectType(t: GraphQLNamedType): t is GraphQLInputObjectType {
+  return t instanceof GraphQLInputObjectType;
+}
+
+function isEnumType(t: GraphQLNamedType): t is GraphQLEnumType {
+  return t instanceof GraphQLEnumType;
 }
 
 function needsResolver(config: Config, t: GraphQLObjectType): boolean {
