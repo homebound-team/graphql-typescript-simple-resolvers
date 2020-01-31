@@ -60,10 +60,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
   `;
   chunks.push(resolvers);
 
-  const argDefs: Code[] = [];
-
   // Make each resolver for any output type, whether its required or optional
   const ctx = toImp(config.contextType);
+  const argDefs: Code[] = [];
   [...typesThatNeedResolvers, ...typesThatMayHaveResolvers].forEach(type => {
     chunks.push(code`
       export interface ${type.name}Resolvers {
@@ -84,14 +83,12 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
       }
     `);
   });
-
   chunks.push(code`
     type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
   `);
-
   argDefs.forEach(a => chunks.push(a));
 
-  // For the output types with optional resolvers, make DTOs for them
+  // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
   typesThatMayHaveResolvers.forEach(type => {
     chunks.push(code`
       export interface ${type.name} {
@@ -118,7 +115,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
   // Enums
   Object.values(schema.getTypeMap())
     .filter(isEnumType)
-    .filter(t => !t.name.startsWith("__"))
+    .filter(isNotMetadataType)
     .forEach(type => {
       const mappedEnum = config.enumValues[type.name];
       if (!mappedEnum) {
@@ -220,11 +217,15 @@ function isScalarType(t: GraphQLNamedType): t is GraphQLScalarType {
 }
 
 function needsResolver(config: Config, t: GraphQLObjectType): boolean {
-  return !t.name.startsWith("__") && (!!config.mappers[t.name] || t.name === "Query" || t.name === "Mutation");
+  return isNotMetadataType(t) && (!!config.mappers[t.name] || t.name === "Query" || t.name === "Mutation");
 }
 
 function optionalResolver(config: Config, t: GraphQLObjectType): boolean {
-  return !t.name.startsWith("__") && !config.mappers[t.name] && t.name !== "Query" && t.name !== "Mutation";
+  return isNotMetadataType(t) && !config.mappers[t.name] && t.name !== "Query" && t.name !== "Mutation";
+}
+
+function isNotMetadataType(t: GraphQLNamedType): boolean {
+  return !t.name.startsWith("__");
 }
 
 /** The config values we read from the graphql-codegen.yml file. */
