@@ -13,6 +13,12 @@ type AuthorSummary {
   amountOfSales: Float
 }
 
+type Book {
+  name: String!
+}
+
+union SearchResult = Author | Book
+
 schema {
   query: Query
   mutation: Mutation
@@ -21,6 +27,7 @@ schema {
 type Query {
   authors(id: ID): [Author!]!
   authorSummaries: [AuthorSummary!]!
+  search(query: String!): [SearchResult!]!
 }
 
 type Mutation {
