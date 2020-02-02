@@ -6,8 +6,10 @@ import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 import {
   isEnumType,
   isInputObjectType,
+  isMappedType,
   isNotMetadataType,
   isObjectType,
+  isQueryOrMutationType,
   isScalarType,
   mapObjectType,
   mapType,
@@ -165,11 +167,11 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
 }
 
 function needsResolver(config: Config, t: GraphQLObjectType): boolean {
-  return isNotMetadataType(t) && (!!config.mappers[t.name] || t.name === "Query" || t.name === "Mutation");
+  return isNotMetadataType(t) && (isMappedType(t, config) || isQueryOrMutationType(t));
 }
 
 function optionalResolver(config: Config, t: GraphQLObjectType): boolean {
-  return isNotMetadataType(t) && !config.mappers[t.name] && t.name !== "Query" && t.name !== "Mutation";
+  return isNotMetadataType(t) && !isMappedType(t, config) && !isQueryOrMutationType(t);
 }
 
 /** The config values we read from the graphql-codegen.yml file. */

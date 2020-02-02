@@ -40,7 +40,7 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
 }
 
 export function mapObjectType(config: Config, type: GraphQLObjectType): any {
-  if (type.name === "Query" || type.name === "Mutation") {
+  if (isQueryOrMutationType(type)) {
     return "{}";
   }
   return toImp(config.mappers[type.name]) || type.name;
@@ -101,4 +101,12 @@ export function isScalarType(t: GraphQLNamedType): t is GraphQLScalarType {
 
 export function isNotMetadataType(t: GraphQLNamedType): boolean {
   return !t.name.startsWith("__");
+}
+
+export function isQueryOrMutationType(type: GraphQLNamedType) {
+  return type.name === "Query" || type.name === "Mutation";
+}
+
+export function isMappedType(type: GraphQLNamedType, config: Config) {
+  return !!config.mappers[type.name];
 }
