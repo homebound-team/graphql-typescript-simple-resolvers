@@ -1,4 +1,5 @@
 import {
+  GraphQLSchema,
   GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLList,
@@ -40,9 +41,31 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     .filter(isObjectType)
     .filter(t => optionalResolver(config, t));
 
+  const allTypesWithResolvers = [...typesThatNeedResolvers, ...typesThatMayHaveResolvers];
+
   const scalars = Object.values(schema.getTypeMap()).filter(isScalarType);
 
-  // Make the top-level Resolvers interface
+  generateTopLevelResolversType(chunks, typesThatMayHaveResolvers, typesThatNeedResolvers, scalars);
+
+  generateEachResolverType(chunks, config, allTypesWithResolvers);
+
+  generateDtosForNonMappedTypes(chunks, config, typesThatMayHaveResolvers);
+
+  generateInputTypes(chunks, config, schema);
+
+  generateEnums(chunks, config, schema);
+
+  const content = await code`${chunks}`.toStringWithImports();
+  return { content } as PluginOutput;
+};
+
+// Make the top-level Resolvers interface
+function generateTopLevelResolversType(
+  chunks: Code[],
+  typesThatMayHaveResolvers: GraphQLObjectType[],
+  typesThatNeedResolvers: GraphQLObjectType[],
+  scalars: GraphQLScalarType[],
+): void {
   const resolvers = code`
     export interface Resolvers {
       ${typesThatNeedResolvers.map(o => {
@@ -59,11 +82,13 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     }
   `;
   chunks.push(resolvers);
+}
 
+function generateEachResolverType(chunks: Code[], config: Config, allTypesWithResolvers: GraphQLObjectType[]) {
   // Make each resolver for any output type, whether its required or optional
   const ctx = toImp(config.contextType);
   const argDefs: Code[] = [];
-  [...typesThatNeedResolvers, ...typesThatMayHaveResolvers].forEach(type => {
+  allTypesWithResolvers.forEach(type => {
     chunks.push(code`
       export interface ${type.name}Resolvers {
         ${Object.values(type.getFields()).map(f => {
@@ -87,7 +112,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
     type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
   `);
   argDefs.forEach(a => chunks.push(a));
+}
 
+function generateDtosForNonMappedTypes(chunks: Code[], config: Config, typesThatMayHaveResolvers: GraphQLObjectType[]) {
   // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
   typesThatMayHaveResolvers.forEach(type => {
     chunks.push(code`
@@ -98,8 +125,10 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
       }
     `);
   });
+}
 
-  // Input types
+// Input types
+function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchema): void {
   Object.values(schema.getTypeMap())
     .filter(isInputObjectType)
     .forEach(type => {
@@ -111,7 +140,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
         }
     `);
     });
+}
 
+function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): void {
   // Enums
   Object.values(schema.getTypeMap())
     .filter(isEnumType)
@@ -131,10 +162,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
         `);
       }
     });
-
-  const content = await code`${chunks}`.toStringWithImports();
-  return { content } as PluginOutput;
-};
+}
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
 function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectType): any {
