@@ -6,6 +6,7 @@ export interface Resolvers {
   Author: AuthorResolvers;
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
+  Book?: BookResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
   Date: GraphQLScalarType;
 }
@@ -13,6 +14,7 @@ export interface Resolvers {
 export interface QueryResolvers {
   authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
   authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface AuthorResolvers {
@@ -32,6 +34,10 @@ export interface AuthorSummaryResolvers {
   amountOfSales: Resolver<AuthorSummary, {}, number | null>;
 }
 
+export interface BookResolvers {
+  name: Resolver<Book, {}, string>;
+}
+
 export interface SaveAuthorResultResolvers {
   author: Resolver<SaveAuthorResult, {}, AuthorId>;
 }
@@ -41,12 +47,19 @@ type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveIn
 export interface QueryAuthorsArgs {
   id: string | null;
 }
+export interface QuerySearchArgs {
+  query: string;
+}
 export interface MutationSaveAuthorArgs {
   input: AuthorInput;
 }
 export interface AuthorSummary {
   numberOfBooks: number;
   amountOfSales: number | null;
+}
+
+export interface Book {
+  name: string;
 }
 
 export interface SaveAuthorResult {

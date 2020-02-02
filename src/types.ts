@@ -7,6 +7,7 @@ import {
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLScalarType,
+  GraphQLUnionType,
 } from "graphql";
 import { code, imp } from "ts-poet";
 import { Config } from "./index";
@@ -22,7 +23,13 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
     return nullableOf(
       (() => {
         if (type instanceof GraphQLList) {
-          return code`${mapType(config, type.ofType)}[]`;
+          const elementType = mapType(config, type.ofType);
+          // Union types will be an array and need `Array<...>`.
+          if (elementType instanceof Array) {
+            return code`Array<${elementType}>`;
+          } else {
+            return code`${elementType}[]`;
+          }
         } else if (type instanceof GraphQLObjectType) {
           return mapObjectType(config, type);
         } else if (type instanceof GraphQLScalarType) {
@@ -31,6 +38,11 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
           return mapEnumType(config, type);
         } else if (type instanceof GraphQLInputObjectType) {
           return type.name;
+        } else if (type instanceof GraphQLUnionType) {
+          return joinCodes(
+            type.getTypes().map(t => mapObjectType(config, t)),
+            " | ",
+          );
         } else {
           throw new Error(`Unsupported type ${type}`);
         }
@@ -109,4 +121,16 @@ export function isQueryOrMutationType(type: GraphQLNamedType) {
 
 export function isMappedType(type: GraphQLNamedType, config: Config) {
   return !!config.mappers[type.name];
+}
+
+/** A `.join(...)` that doesn't `toString()` elements so that they can stay codes. */
+function joinCodes(elements: unknown[], delimiter: string): unknown[] {
+  const result: unknown[] = [];
+  for (let i = 0; i < elements.length; i++) {
+    result.push(elements[i]);
+    if (i !== elements.length - 1) {
+      result.push(delimiter);
+    }
+  }
+  return result;
 }
