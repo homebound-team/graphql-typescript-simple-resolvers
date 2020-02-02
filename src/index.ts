@@ -47,21 +47,25 @@ export const plugin: PluginFunction<Config> = async (schema, documents, config) 
 
   const scalars = Object.values(schema.getTypeMap()).filter(isScalarType);
 
+  // Make the top-level Resolvers interface
   generateTopLevelResolversType(chunks, typesThatMayHaveResolvers, typesThatNeedResolvers, scalars);
 
+  // Make each resolver for any output type, whether its required or optional
   generateEachResolverType(chunks, config, allTypesWithResolvers);
 
+  // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
   generateDtosForNonMappedTypes(chunks, config, typesThatMayHaveResolvers);
 
+  // Input types
   generateInputTypes(chunks, config, schema);
 
+  // Enums
   generateEnums(chunks, config, schema);
 
   const content = await code`${chunks}`.toStringWithImports();
   return { content } as PluginOutput;
 };
 
-// Make the top-level Resolvers interface
 function generateTopLevelResolversType(
   chunks: Code[],
   typesThatMayHaveResolvers: GraphQLObjectType[],
@@ -87,7 +91,6 @@ function generateTopLevelResolversType(
 }
 
 function generateEachResolverType(chunks: Code[], config: Config, allTypesWithResolvers: GraphQLObjectType[]) {
-  // Make each resolver for any output type, whether its required or optional
   const ctx = toImp(config.contextType);
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach(type => {
@@ -117,7 +120,6 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
 }
 
 function generateDtosForNonMappedTypes(chunks: Code[], config: Config, typesThatMayHaveResolvers: GraphQLObjectType[]) {
-  // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
   typesThatMayHaveResolvers.forEach(type => {
     chunks.push(code`
       export interface ${type.name} {
@@ -129,7 +131,6 @@ function generateDtosForNonMappedTypes(chunks: Code[], config: Config, typesThat
   });
 }
 
-// Input types
 function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchema): void {
   Object.values(schema.getTypeMap())
     .filter(isInputObjectType)
@@ -145,7 +146,6 @@ function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchem
 }
 
 function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): void {
-  // Enums
   Object.values(schema.getTypeMap())
     .filter(isEnumType)
     .filter(isNotMetadataType)
