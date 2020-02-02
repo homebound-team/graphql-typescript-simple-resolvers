@@ -22,15 +22,7 @@ const GraphQLScalarTypeSymbol = imp("GraphQLScalarType@graphql");
 const GraphQLResolveInfo = imp("GraphQLResolveInfo@graphql");
 
 /**
- * Generates Resolver type definitions.
- *
- * In theory the output is generally the same as the `typescript-resolvers` plugin, except ours
- * is:
- *
- * a) generally much simpler (i.e. it is a dedicted-to-resolvers plugin and so doesn't have to
- * monkey-patch the out-of-the-box `tyepscript` plugin types with `Omit`s for every mpped type , and
- *
- * b) has better support for avoidOptionals, we only require resolvers for non-mapped types.
+ * Generates Resolver/server-side type definitions for an Apollo-based GraphQL implementation.
  */
 export const plugin: PluginFunction<Config> = async (schema, documents, config) => {
   const chunks: Code[] = [];
