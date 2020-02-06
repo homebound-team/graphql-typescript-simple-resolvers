@@ -13,7 +13,7 @@ import { Config } from "./index";
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
 export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectType): any {
-  if (type instanceof GraphQLNonNull) {
+  if (isNonNullType(type)) {
     // Recurse and assume our recursion will come back nullable, which we strip.
     return stripNullable(mapType(config, type.ofType));
   } else {
@@ -85,6 +85,10 @@ export function toImp(spec: string | undefined): unknown {
 
 export function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {
   return t instanceof GraphQLObjectType;
+}
+
+export function isNonNullType(t: GraphQLOutputType | GraphQLInputObjectType): t is GraphQLNonNull<any> {
+  return t instanceof GraphQLNonNull;
 }
 
 export function isInputObjectType(t: GraphQLNamedType): t is GraphQLInputObjectType {
