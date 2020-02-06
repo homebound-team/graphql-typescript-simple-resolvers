@@ -67,7 +67,7 @@ export interface SaveAuthorResult {
 }
 
 export interface AuthorInput {
-  name: string | null;
+  name?: string | null;
 }
 
 export { Popularity } from "./entities";

@@ -7,6 +7,7 @@ import {
   isEnumType,
   isInputObjectType,
   isMappedType,
+  isNonNullType,
   isNotMetadataType,
   isObjectType,
   isQueryOrMutationType,
@@ -130,7 +131,9 @@ function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchem
       chunks.push(code`
         export interface ${type.name} {
           ${Object.values(type.getFields()).map(f => {
-            return code`${f.name}: ${mapType(config, f.type)};`;
+            const isNonNull = isNonNullType(f.type);
+            const maybeOptional = !isNonNull ? "?" : "";
+            return code`${f.name}${maybeOptional}: ${mapType(config, f.type)};`;
           })}
         }
     `);
