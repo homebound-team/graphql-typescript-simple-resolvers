@@ -21,8 +21,8 @@ export interface AuthorResolvers {
   name: Resolver<AuthorId, {}, string>;
   summary: Resolver<AuthorId, {}, AuthorSummary>;
   popularity: Resolver<AuthorId, {}, Popularity>;
-  working: Resolver<AuthorId, {}, Working | null>;
-  birthday: Resolver<AuthorId, {}, Date | null>;
+  working: Resolver<AuthorId, {}, Working | null | undefined>;
+  birthday: Resolver<AuthorId, {}, Date | null | undefined>;
 }
 
 export interface MutationResolvers {
@@ -31,7 +31,7 @@ export interface MutationResolvers {
 
 export interface AuthorSummaryResolvers {
   numberOfBooks: Resolver<AuthorSummary, {}, number>;
-  amountOfSales: Resolver<AuthorSummary, {}, number | null>;
+  amountOfSales: Resolver<AuthorSummary, {}, number | null | undefined>;
 }
 
 export interface BookResolvers {
@@ -45,7 +45,7 @@ export interface SaveAuthorResultResolvers {
 type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
 
 export interface QueryAuthorsArgs {
-  id: string | null;
+  id: string | null | undefined;
 }
 export interface QuerySearchArgs {
   query: string;
@@ -55,7 +55,7 @@ export interface MutationSaveAuthorArgs {
 }
 export interface AuthorSummary {
   numberOfBooks: number;
-  amountOfSales: number | null;
+  amountOfSales: number | null | undefined;
 }
 
 export interface Book {
@@ -67,7 +67,7 @@ export interface SaveAuthorResult {
 }
 
 export interface AuthorInput {
-  name?: string | null;
+  name?: string | null | undefined;
 }
 
 export { Popularity } from "./entities";

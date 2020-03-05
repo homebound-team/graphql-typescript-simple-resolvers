@@ -74,12 +74,15 @@ function mapScalarType(type: GraphQLScalarType): string {
 
 /** Marks `type` as nullable in a way that both will be output correctly by ts-poet + can be undone. */
 function nullableOf(type: unknown): unknown {
-  return [type, "| null"];
+  // We allow `| undefined` because it's handy for server impls that want to treat
+  // `null` in the database as `undefined`, and the graphql.js runtime will turn
+  // `undefined` into `null` for us anyway.
+  return [type, "| null | undefined"];
 }
 
 /** Unmarks `type` as nullable, i.e. types are always nullable until unwrapped by a GraphQLNonNull parent. */
 function stripNullable(type: unknown): unknown {
-  if (type instanceof Array && type.length == 2 && type[1] === "| null") {
+  if (type instanceof Array && type.length == 2 && type[1] === "| null | undefined") {
     return type[0];
   } else {
     return type;
