@@ -12,12 +12,13 @@
     "graphql-codegen": "graphql-codegen --config integration/graphql-codegen.yml"
   },
   "dependencies": {
-    "@graphql-codegen/plugin-helpers": "^1.12.1",
+    "@graphql-codegen/plugin-helpers": "^1.13.2",
     "change-case": "^4.1.1",
     "ts-poet": "^3.0.0"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^1.12.1",
+    "@graphql-codegen/cli": "^1.13.2",
+    "graphql": "^15.0.0",
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-prettier": "^3.1.1",
     "husky": "^3.0.9",

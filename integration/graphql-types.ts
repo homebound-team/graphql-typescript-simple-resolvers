@@ -2,19 +2,13 @@ import { Context, AuthorId, Popularity } from "./entities";
 import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
 export interface Resolvers {
-  Query: QueryResolvers;
   Author: AuthorResolvers;
+  Query: QueryResolvers;
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
   Book?: BookResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
   Date: GraphQLScalarType;
-}
-
-export interface QueryResolvers {
-  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
-  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface AuthorResolvers {
@@ -23,6 +17,12 @@ export interface AuthorResolvers {
   popularity: Resolver<AuthorId, {}, Popularity>;
   working: Resolver<AuthorId, {}, Working | null | undefined>;
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
+}
+
+export interface QueryResolvers {
+  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface MutationResolvers {
