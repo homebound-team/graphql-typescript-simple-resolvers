@@ -28,7 +28,7 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: circleci/node:12.7
+      - image: circleci/node:erbium
     working_directory: ~/project
     steps:
       - checkout
@@ -42,4 +42,3 @@ jobs:
           steps:
             - run: ./bump.sh package.json
             - run: npm publish
-
