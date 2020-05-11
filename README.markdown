@@ -1,3 +1,4 @@
+[![NPM](https://img.shields.io/npm/v/@homebound/graphql-typescript-simple-resolvers)](https://www.npmjs.com/package/@homebound/graphql-typescript-simple-resolvers)
 
 This is a [graphql-code-generator](https://graphql-code-generator.com/) plugin that generates types for implementating an Apollo-/`graphql`-style implementation in TypeScript.
 
