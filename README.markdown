@@ -1,6 +1,7 @@
 
 This is a [graphql-code-generator](https://graphql-code-generator.com/) plugin that generates types for implementating an Apollo-/`graphql`-style implementation in TypeScript.
 
+## Overview
 graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, however we have several improvements over it's out-of-the-box behavior:
 
 1. We generate purely server-side types, so the resulting output is generally much simpler and less error-prone.
@@ -30,3 +31,15 @@ graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, h
    The visitor pattern is usually very appropriate for compiler-/AST-based systems, however at least for what this plugin is doing, it seems like overkill. The GraphQL type system is actually pretty "short" in depth, i.e. a type might be "a non-null list of non-null types", maybe with some union types thrown in, but generally not something that a little recursion can't handle.
 
    Net/net, we ran into several minor bugs in the `typescript-resolvers` implementation, and having this "KISS" implementation so far has been easier to build and maintain than coming up-to-speed on the built-in `typescript-resolvers` plugin.
+
+## Contributing
+
+In order to develop changes for this package, follow these steps:
+
+1. Make your desired changes in the [`src` directory](/src)
+
+2. Adjust the example files under the [`integration` directory](/integration) to use your new feature.
+
+3. Run `npm run build`, to create a build with your changes
+
+4. Run `npm run graphql-codegen`, and verify the output in `graphql-types.ts` matches your expected output.

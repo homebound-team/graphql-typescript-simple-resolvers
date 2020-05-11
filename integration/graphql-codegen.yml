@@ -5,6 +5,8 @@ generates:
   integration/graphql-types.ts:
     config:
       contextType: "./entities#Context"
+      scalars:
+        DateTime: Date
       mappers:
         Author: "./entities#AuthorId"
       enumValues:
