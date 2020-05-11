@@ -25,7 +25,9 @@ const GraphQLResolveInfo = imp("GraphQLResolveInfo@graphql");
 /**
  * Generates Resolver/server-side type definitions for an Apollo-based GraphQL implementation.
  */
-export const plugin: PluginFunction<Config> = async (schema, documents, config) => {
+export const plugin: PluginFunction<Config> = async (schema, documents, configFromFile) => {
+  // Load in a default config which ensures that `Record` fields are non-null
+  const config = { ...defaultConfig, ...configFromFile };
   const chunks: Code[] = [];
 
   const typesThatNeedResolvers = Object.values(schema.getTypeMap())
@@ -172,6 +174,13 @@ function optionalResolver(config: Config, t: GraphQLObjectType): boolean {
 /** The config values we read from the graphql-codegen.yml file. */
 export type Config = {
   contextType: string;
+  scalars: Record<string, string>;
   mappers: Record<string, string>;
   enumValues: Record<string, string>;
+};
+
+const defaultConfig: Omit<Config, "contextType"> = {
+  scalars: {},
+  mappers: {},
+  enumValues: {},
 };

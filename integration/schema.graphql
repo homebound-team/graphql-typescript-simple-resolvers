@@ -5,6 +5,7 @@ type Author {
   popularity: Popularity!
   working: Working
   birthday: Date
+  birthdayPartyScheduled: DateTime
 }
 
 # A DTO that is just some fields
@@ -53,3 +54,4 @@ enum Working {
 }
 
 scalar Date
+scalar DateTime

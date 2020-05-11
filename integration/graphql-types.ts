@@ -9,6 +9,7 @@ export interface Resolvers {
   Book?: BookResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
   Date: GraphQLScalarType;
+  DateTime: GraphQLScalarType;
 }
 
 export interface AuthorResolvers {
@@ -17,6 +18,7 @@ export interface AuthorResolvers {
   popularity: Resolver<AuthorId, {}, Popularity>;
   working: Resolver<AuthorId, {}, Working | null | undefined>;
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
+  birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
 }
 
 export interface QueryResolvers {

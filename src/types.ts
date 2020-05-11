@@ -33,7 +33,7 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
         } else if (type instanceof GraphQLObjectType) {
           return mapObjectType(config, type);
         } else if (type instanceof GraphQLScalarType) {
-          return mapScalarType(type);
+          return mapScalarType(config, type);
         } else if (type instanceof GraphQLEnumType) {
           return mapEnumType(config, type);
         } else if (type instanceof GraphQLInputObjectType) {
@@ -62,13 +62,13 @@ function mapEnumType(config: Config, type: GraphQLEnumType): any {
   return toImp(config.enumValues[type.name]) || type.name;
 }
 
-function mapScalarType(type: GraphQLScalarType): string {
+function mapScalarType(config: Config, type: GraphQLScalarType): string {
   if (type.name === "String" || type.name === "ID") {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
     return "number";
   } else {
-    return type.name.toString();
+    return config.scalars[type.name] || type.name.toString();
   }
 }
 
