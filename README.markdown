@@ -10,7 +10,7 @@ graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, h
 
    Because the built-in `typescript-resolvers` plugin is based on the rest of the `graphql-code-generator` implementations, it originally generates "client-side" GraphQL types (i.e. `type Author { books: Book[] } type Book { author: Author }`, and then later re-jiggers these types to work well for the server-side, i.e. layers in the mapped types like `type Author { books: BookId[] } type Book { author: AuthorId }`.
    
-   This leads to a fair amount of `Omit`/ `&` / `Omit` / `*` complexity that really we don't want/need, so this plugin generates the `Author`, `Book`, etc. types out-of-the-box with the appropriate mapped types baked into the types.
+   This leads to a fair amount of `Omit`/ `&` / `Omit` / `&*` complexity that really we don't want/need, so this plugin generates the `Author`, `Book`, etc. types out-of-the-box with the appropriate mapped types baked into the types.
 
 2. Better `avoidOptionals` behavior.
 
