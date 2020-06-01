@@ -5,7 +5,7 @@ This is a [graphql-code-generator](https://graphql-code-generator.com/) plugin t
 ## Overview
 graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, however we have several improvements over it's out-of-the-box behavior:
 
-1. We generate purely server-side types, so the resulting output is generally much simpler and less error-prone.
+1. We generate purely server-side types, so the resulting output is generally much simpler and less error-prone (for engineers to read and reason about).
 
    Because the built-in `typescript-resolvers` plugin is based on the rest of the `graphql-code-generator` implementations, it originally generates "client-side" GraphQL types (i.e. `type Author { books: Book[] } type Book { author: Author }`, and then re-jiggers these types to work well for the server-side, i.e. layers in the mapped types like `type Author { books: BookId[] } type Book { author: AuthorId }`.
    
