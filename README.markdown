@@ -3,13 +3,14 @@
 This is a [graphql-code-generator](https://graphql-code-generator.com/) plugin that generates types for implementating an Apollo-/`graphql`-style implementation in TypeScript.
 
 ## Overview
-graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, however we have several improvements over it's out-of-the-box behavior:
+
+graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, however we have several opinionated/convention-based improvements over it's out-of-the-box behavior:
 
 1. We generate purely server-side types, so the resulting output is generally much simpler and less error-prone (for engineers to read and reason about).
 
-   Because the built-in `typescript-resolvers` plugin is based on the rest of the `graphql-code-generator` implementations, it originally generates "client-side" GraphQL types (i.e. `type Author { books: Book[] } type Book { author: Author }`, and then re-jiggers these types to work well for the server-side, i.e. layers in the mapped types like `type Author { books: BookId[] } type Book { author: AuthorId }`.
+   Because the built-in `typescript-resolvers` plugin is based on the rest of the `graphql-code-generator` implementations, it originally generates "client-side" GraphQL types (i.e. `type Author { books: Book[] } type Book { author: Author }`, and then later re-jiggers these types to work well for the server-side, i.e. layers in the mapped types like `type Author { books: BookId[] } type Book { author: AuthorId }`.
    
-   This leads to a fair amount of `Omit` complexity that really we don't need, and so this plugin generates the `Author`, `Book`, etc. types out-of-the-box with the appropriate mapped types baked into the types.
+   This leads to a fair amount of `Omit`/ `&` / `Omit` / `*` complexity that really we don't want/need, so this plugin generates the `Author`, `Book`, etc. types out-of-the-box with the appropriate mapped types baked into the types.
 
 2. Better `avoidOptionals` behavior.
 
@@ -29,7 +30,7 @@ graphql-code-generator has a built-in plugin for this, `typescript-resolvers`, h
 
    The graphql-code-generator ecosystem is huge, and its breadth of functionality is impressive, but most of their plugins are: a) based on a visitor pattern, and b) reuse a lot of non-trivial visitor-based primitives across the various plugins.
    
-   The visitor pattern is usually very appropriate for compiler-/AST-based systems, however at least for what this plugin is doing, it seems like overkill. The GraphQL type system is actually pretty "short" in depth, i.e. a type might be "a non-null list of non-null types", maybe with some union types thrown in, but generally not something that a little recursion can't handle.
+   The visitor pattern is usually very appropriate for compiler-/AST-based systems, however at least for what this plugin is doing, it seems like overkill. The GraphQL type system is actually pretty "short" in depth, i.e. a type might be "a non-null list of non-null types", maybe with some union types thrown in, but generally not something that a little recursion can't handle (vs. expressions in programming language ASTs which can be very deep and is where the visitor pattern is great).
 
    Net/net, we ran into several minor bugs in the `typescript-resolvers` implementation, and having this "KISS" implementation so far has been easier to build and maintain than coming up-to-speed on the built-in `typescript-resolvers` plugin.
 
@@ -44,3 +45,10 @@ In order to develop changes for this package, follow these steps:
 3. Run `npm run build`, to create a build with your changes
 
 4. Run `npm run graphql-codegen`, and verify the output in `graphql-types.ts` matches your expected output.
+
+## Config
+
+We support the same `contextType`, `mappers`, and `enumValues` config options as the stock `typescript-resolvers` plugin.
+
+No other config options are currently supported b/c the output is tailored to our conventions.
+
