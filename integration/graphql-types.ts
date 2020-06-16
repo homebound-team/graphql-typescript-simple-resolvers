@@ -19,6 +19,7 @@ export interface AuthorResolvers {
   working: Resolver<AuthorId, {}, Working | null | undefined>;
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
   birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
+  populate: Resolver<AuthorId, {}, boolean | null | undefined>;
 }
 
 export interface QueryResolvers {

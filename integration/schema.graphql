@@ -6,6 +6,7 @@ type Author {
   working: Working
   birthday: Date
   birthdayPartyScheduled: DateTime
+  populate: Boolean
 }
 
 # A DTO that is just some fields

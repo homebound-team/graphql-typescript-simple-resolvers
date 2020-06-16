@@ -67,6 +67,8 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
     return "number";
+  } else if (type.name === "Boolean") {
+    return "boolean";
   } else {
     return config.scalars[type.name] || type.name.toString();
   }
