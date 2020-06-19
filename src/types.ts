@@ -12,6 +12,8 @@ import {
 import { code, imp } from "ts-poet";
 import { Config } from "./index";
 
+const NULLABLE_TYPES = "| null | undefined";
+
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
 export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectType): any {
   if (isNonNullType(type)) {
@@ -79,12 +81,12 @@ function nullableOf(type: unknown): unknown {
   // We allow `| undefined` because it's handy for server impls that want to treat
   // `null` in the database as `undefined`, and the graphql.js runtime will turn
   // `undefined` into `null` for us anyway.
-  return [type, "| null | undefined"];
+  return [type, NULLABLE_TYPES];
 }
 
 /** Unmarks `type` as nullable, i.e. types are always nullable until unwrapped by a GraphQLNonNull parent. */
 function stripNullable(type: unknown): unknown {
-  if (type instanceof Array && type.length == 2 && type[1] === "| null | undefined") {
+  if (type instanceof Array && type.length == 2 && type[1] === NULLABLE_TYPES) {
     return type[0];
   } else {
     return type;
@@ -134,7 +136,7 @@ export function isMappedType(type: GraphQLNamedType, config: Config) {
 
 /** A `.join(...)` that doesn't `toString()` elements so that they can stay codes. */
 function joinCodes(elements: unknown[], delimiter: string): unknown[] {
-  const result: unknown[] = [];
+  const result: unknown[] = [delimiter];
   for (let i = 0; i < elements.length; i++) {
     result.push(elements[i]);
     if (i !== elements.length - 1) {

@@ -39,6 +39,8 @@ export interface AuthorSummaryResolvers {
 
 export interface BookResolvers {
   name: Resolver<Book, {}, string>;
+  unionProp: Resolver<Book, {}, null | undefined | String | Boolean>;
+  reqUnionProp: Resolver<Book, {}, String | Boolean>;
 }
 
 export interface SaveAuthorResultResolvers {
@@ -63,6 +65,8 @@ export interface AuthorSummary {
 
 export interface Book {
   name: string;
+  unionProp: null | undefined | String | Boolean;
+  reqUnionProp: String | Boolean;
 }
 
 export interface SaveAuthorResult {
