@@ -17,7 +17,11 @@ type AuthorSummary {
 
 type Book {
   name: String!
+  unionProp: UnionProp
+  reqUnionProp: UnionProp!
 }
+
+union UnionProp = String | Boolean
 
 union SearchResult = Author | Book
 
