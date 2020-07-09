@@ -109,7 +109,7 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
     `);
   });
   chunks.push(code`
-    type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
+    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
   `);
   argDefs.forEach(a => chunks.push(a));
 }
