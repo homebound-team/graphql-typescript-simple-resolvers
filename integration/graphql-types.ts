@@ -2,14 +2,20 @@ import { Context, AuthorId, Popularity } from "./entities";
 import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
 export interface Resolvers {
-  Author: AuthorResolvers;
   Query: QueryResolvers;
+  Author: AuthorResolvers;
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
   Book?: BookResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
   Date: GraphQLScalarType;
   DateTime: GraphQLScalarType;
+}
+
+export interface QueryResolvers {
+  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface AuthorResolvers {
@@ -20,12 +26,6 @@ export interface AuthorResolvers {
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
   birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
   populate: Resolver<AuthorId, {}, boolean | null | undefined>;
-}
-
-export interface QueryResolvers {
-  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
-  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface MutationResolvers {
@@ -47,10 +47,10 @@ export interface SaveAuthorResultResolvers {
   author: Resolver<SaveAuthorResult, {}, AuthorId>;
 }
 
-type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
 
 export interface QueryAuthorsArgs {
-  id: string | null | undefined;
+  id?: string | null | undefined;
 }
 export interface QuerySearchArgs {
   query: string;

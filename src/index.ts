@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLScalarType, GraphQLSchema } from "graphql";
+import { GraphQLObjectType, GraphQLScalarType, GraphQLSchema, isNullableType } from "graphql";
 import { pascalCase } from "change-case";
 import { upperCaseFirst } from "upper-case-first";
 import { code, Code, imp } from "ts-poet";
@@ -97,7 +97,10 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
           if (f.args.length > 0) {
             argDefs.push(code`
               export interface ${argsName} {
-                ${f.args.map(a => code`${a.name}: ${mapType(config, a.type)}; `)}
+                ${f.args.map(a => {
+                  const maybeOptional = isNullableType(a.type) ? "?" : "";
+                  return code`${a.name}${maybeOptional}: ${mapType(config, a.type)}; `;
+                })}
               }`);
           }
 
