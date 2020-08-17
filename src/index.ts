@@ -45,6 +45,18 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
     .filter(isObjectType)
     .filter(t => optionalResolver(config, t));
 
+  const interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]> = new Map();
+  Object.values(schema.getTypeMap())
+    .filter(isObjectType)
+    .forEach(t => {
+      t.getInterfaces().forEach(it => {
+        if (!interfaceToImpls.has(it)) {
+          interfaceToImpls.set(it, []);
+        }
+        interfaceToImpls.get(it)!.push(t);
+      });
+    });
+
   const allTypesWithResolvers = [...typesThatNeedResolvers, ...typesThatMayHaveResolvers];
 
   const scalars = Object.values(schema.getTypeMap()).filter(isScalarType);
@@ -53,14 +65,14 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   generateTopLevelResolversType(chunks, typesThatMayHaveResolvers, typesThatNeedResolvers, scalars);
 
   // Make each resolver for any output type, whether its required or optional
-  generateEachResolverType(chunks, config, allTypesWithResolvers);
+  generateEachResolverType(chunks, config, interfaceToImpls, allTypesWithResolvers);
 
   // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
   const interfaceTypes = Object.values(schema.getTypeMap()).filter(isInterfaceType);
-  generateDtosForNonMappedTypes(chunks, config, [...typesThatMayHaveResolvers, ...interfaceTypes]);
+  generateDtosForNonMappedTypes(chunks, config, interfaceToImpls, [...typesThatMayHaveResolvers, ...interfaceTypes]);
 
   // Input types
-  generateInputTypes(chunks, config, schema);
+  generateInputTypes(chunks, config, interfaceToImpls, schema);
 
   // Enums
   generateEnums(chunks, config, schema);
@@ -93,7 +105,12 @@ function generateTopLevelResolversType(
   chunks.push(resolvers);
 }
 
-function generateEachResolverType(chunks: Code[], config: Config, allTypesWithResolvers: GraphQLObjectType[]) {
+function generateEachResolverType(
+  chunks: Code[],
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  allTypesWithResolvers: GraphQLObjectType[],
+) {
   const ctx = toImp(config.contextType);
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach(type => {
@@ -107,13 +124,13 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
               export interface ${argsName} {
                 ${f.args.map(a => {
                   const maybeOptional = isNullableType(a.type) ? "?" : "";
-                  return code`${a.name}${maybeOptional}: ${mapType(config, a.type)}; `;
+                  return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
                 })}
               }`);
           }
 
           const root = mapObjectType(config, type);
-          const result = mapType(config, f.type);
+          const result = mapType(config, interfaceToImpls, f.type);
           return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
         })}
       }
@@ -128,20 +145,26 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
 function generateDtosForNonMappedTypes(
   chunks: Code[],
   config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   types: (GraphQLObjectType | GraphQLInterfaceType)[],
 ) {
   types.forEach(type => {
     chunks.push(code`
       export interface ${type.name} {
         ${Object.values(type.getFields()).map(f => {
-          return code`${f.name}: ${mapType(config, f.type)};`;
+          return code`${f.name}: ${mapType(config, interfaceToImpls, f.type)};`;
         })}
       }
     `);
   });
 }
 
-function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchema): void {
+function generateInputTypes(
+  chunks: Code[],
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  schema: GraphQLSchema,
+): void {
   Object.values(schema.getTypeMap())
     .filter(isInputObjectType)
     .forEach(type => {
@@ -150,7 +173,7 @@ function generateInputTypes(chunks: Code[], config: Config, schema: GraphQLSchem
           ${Object.values(type.getFields()).map(f => {
             const isNonNull = isNonNullType(f.type);
             const maybeOptional = !isNonNull ? "?" : "";
-            return code`${f.name}${maybeOptional}: ${mapType(config, f.type)};`;
+            return code`${f.name}${maybeOptional}: ${mapType(config, interfaceToImpls, f.type)};`;
           })}
         }
     `);

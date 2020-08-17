@@ -49,10 +49,10 @@ export interface SaveAuthorResultResolvers {
 }
 
 export interface ContainerResolvers {
-  thingOptional: Resolver<Container, {}, HasName | null | undefined>;
-  thingRequired: Resolver<Container, {}, HasName>;
-  thingsOptional: Resolver<Container, {}, HasName[] | null | undefined>;
-  thingsRequired: Resolver<Container, {}, HasName[]>;
+  thingOptional: Resolver<Container, {}, null | undefined | AuthorId | HasName>;
+  thingRequired: Resolver<Container, {}, AuthorId | HasName>;
+  thingsOptional: Resolver<Container, {}, Array<AuthorId | HasName> | null | undefined>;
+  thingsRequired: Resolver<Container, {}, Array<AuthorId | HasName>>;
 }
 
 export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
@@ -82,10 +82,10 @@ export interface SaveAuthorResult {
 }
 
 export interface Container {
-  thingOptional: HasName | null | undefined;
-  thingRequired: HasName;
-  thingsOptional: HasName[] | null | undefined;
-  thingsRequired: HasName[];
+  thingOptional: null | undefined | AuthorId | HasName;
+  thingRequired: AuthorId | HasName;
+  thingsOptional: Array<AuthorId | HasName> | null | undefined;
+  thingsRequired: Array<AuthorId | HasName>;
 }
 
 export interface HasName {

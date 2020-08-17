@@ -16,17 +16,21 @@ import { Config } from "./index";
 const NULLABLE_TYPES = "| null | undefined";
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
-export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputObjectType): any {
+export function mapType(
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  type: GraphQLOutputType | GraphQLInputObjectType,
+): any {
   if (isNonNullType(type)) {
     // Recurse and assume our recursion will come back nullable, which we strip.
-    return stripNullable(mapType(config, type.ofType));
+    return stripNullable(mapType(config, interfaceToImpls, type.ofType));
   } else {
     // Mark whatever type we're on as assumed-nullable, which will be stripped
     // if we're wrapped by a GraphQLNonNull type.
     return nullableOf(
       (() => {
         if (type instanceof GraphQLList) {
-          const elementType = mapType(config, type.ofType);
+          const elementType = mapType(config, interfaceToImpls, type.ofType);
           // Union types will be an array and need `Array<...>`.
           if (elementType instanceof Array) {
             return code`Array<${elementType}>`;
@@ -36,7 +40,7 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
         } else if (type instanceof GraphQLObjectType) {
           return mapObjectType(config, type);
         } else if (type instanceof GraphQLInterfaceType) {
-          return mapInterfaceType(config, type);
+          return mapInterfaceType(config, interfaceToImpls, type);
         } else if (type instanceof GraphQLScalarType) {
           return mapScalarType(config, type);
         } else if (type instanceof GraphQLEnumType) {
@@ -63,8 +67,19 @@ export function mapObjectType(config: Config, type: GraphQLObjectType): any {
   return toImp(config.mappers[type.name]) || type.name;
 }
 
-export function mapInterfaceType(config: Config, type: GraphQLInterfaceType): any {
-  return type.name;
+export function mapInterfaceType(
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  type: GraphQLInterfaceType,
+): any {
+  const impls = interfaceToImpls.get(type);
+  if (!impls) {
+    return type.name;
+  }
+  return joinCodes(
+    [...impls.filter(i => isMappedType(i, config)).map(i => mapObjectType(config, i)), type.name],
+    " | ",
+  );
 }
 
 function mapEnumType(config: Config, type: GraphQLEnumType): any {
