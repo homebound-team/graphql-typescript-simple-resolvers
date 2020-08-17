@@ -1,6 +1,7 @@
 import {
   GraphQLEnumType,
   GraphQLInputObjectType,
+  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNamedType,
   GraphQLNonNull,
@@ -34,6 +35,8 @@ export function mapType(config: Config, type: GraphQLOutputType | GraphQLInputOb
           }
         } else if (type instanceof GraphQLObjectType) {
           return mapObjectType(config, type);
+        } else if (type instanceof GraphQLInterfaceType) {
+          return mapInterfaceType(config, type);
         } else if (type instanceof GraphQLScalarType) {
           return mapScalarType(config, type);
         } else if (type instanceof GraphQLEnumType) {
@@ -58,6 +61,10 @@ export function mapObjectType(config: Config, type: GraphQLObjectType): any {
     return "{}";
   }
   return toImp(config.mappers[type.name]) || type.name;
+}
+
+export function mapInterfaceType(config: Config, type: GraphQLInterfaceType): any {
+  return type.name;
 }
 
 function mapEnumType(config: Config, type: GraphQLEnumType): any {

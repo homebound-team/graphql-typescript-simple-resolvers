@@ -1,4 +1,11 @@
-import { GraphQLObjectType, GraphQLScalarType, GraphQLSchema, isNullableType } from "graphql";
+import {
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLSchema,
+  isInterfaceType,
+  isNullableType,
+} from "graphql";
 import { pascalCase } from "change-case";
 import { upperCaseFirst } from "upper-case-first";
 import { code, Code, imp } from "ts-poet";
@@ -49,7 +56,8 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   generateEachResolverType(chunks, config, allTypesWithResolvers);
 
   // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
-  generateDtosForNonMappedTypes(chunks, config, typesThatMayHaveResolvers);
+  const interfaceTypes = Object.values(schema.getTypeMap()).filter(isInterfaceType);
+  generateDtosForNonMappedTypes(chunks, config, [...typesThatMayHaveResolvers, ...interfaceTypes]);
 
   // Input types
   generateInputTypes(chunks, config, schema);
@@ -117,8 +125,12 @@ function generateEachResolverType(chunks: Code[], config: Config, allTypesWithRe
   argDefs.forEach(a => chunks.push(a));
 }
 
-function generateDtosForNonMappedTypes(chunks: Code[], config: Config, typesThatMayHaveResolvers: GraphQLObjectType[]) {
-  typesThatMayHaveResolvers.forEach(type => {
+function generateDtosForNonMappedTypes(
+  chunks: Code[],
+  config: Config,
+  types: (GraphQLObjectType | GraphQLInterfaceType)[],
+) {
+  types.forEach(type => {
     chunks.push(code`
       export interface ${type.name} {
         ${Object.values(type.getFields()).map(f => {

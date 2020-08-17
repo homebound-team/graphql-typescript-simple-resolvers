@@ -8,6 +8,7 @@ export interface Resolvers {
   AuthorSummary?: AuthorSummaryResolvers;
   Book?: BookResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
+  Container?: ContainerResolvers;
   Date: GraphQLScalarType;
   DateTime: GraphQLScalarType;
 }
@@ -47,6 +48,13 @@ export interface SaveAuthorResultResolvers {
   author: Resolver<SaveAuthorResult, {}, AuthorId>;
 }
 
+export interface ContainerResolvers {
+  thingOptional: Resolver<Container, {}, HasName | null | undefined>;
+  thingRequired: Resolver<Container, {}, HasName>;
+  thingsOptional: Resolver<Container, {}, HasName[] | null | undefined>;
+  thingsRequired: Resolver<Container, {}, HasName[]>;
+}
+
 export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
 
 export interface QueryAuthorsArgs {
@@ -71,6 +79,17 @@ export interface Book {
 
 export interface SaveAuthorResult {
   author: AuthorId;
+}
+
+export interface Container {
+  thingOptional: HasName | null | undefined;
+  thingRequired: HasName;
+  thingsOptional: HasName[] | null | undefined;
+  thingsRequired: HasName[];
+}
+
+export interface HasName {
+  name: string;
 }
 
 export interface AuthorInput {

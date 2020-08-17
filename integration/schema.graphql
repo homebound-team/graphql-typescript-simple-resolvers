@@ -1,5 +1,5 @@
 # An entity that will be a mapped typed
-type Author {
+type Author implements HasName {
   name: String!
   summary: AuthorSummary!
   popularity: Popularity!
@@ -15,10 +15,22 @@ type AuthorSummary {
   amountOfSales: Float
 }
 
-type Book {
+type Book implements HasName {
   name: String!
   unionProp: UnionProp
   reqUnionProp: UnionProp!
+}
+
+interface HasName {
+  name: String!
+}
+
+# Example of type that uses fields with interfaces
+type Container {
+  thingOptional: HasName
+  thingRequired: HasName!
+  thingsOptional: [HasName!]
+  thingsRequired: [HasName!]!
 }
 
 union UnionProp = String | Boolean
