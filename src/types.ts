@@ -152,6 +152,10 @@ export function isQueryOrMutationType(type: GraphQLNamedType) {
   return type.name === "Query" || type.name === "Mutation";
 }
 
+export function isSubscriptionType(type: GraphQLNamedType) {
+  return type.name === "Subscription";
+}
+
 export function isMappedType(type: GraphQLNamedType, config: Config) {
   return !!config.mappers[type.name];
 }

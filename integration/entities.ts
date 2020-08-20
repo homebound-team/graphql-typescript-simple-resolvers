@@ -1,5 +1,6 @@
-
-export type Context = any;
+export type Context = {
+  userId?: string;
+};
 
 export type AuthorId = string;
 
