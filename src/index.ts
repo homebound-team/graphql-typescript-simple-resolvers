@@ -22,12 +22,17 @@ import {
   mapObjectType,
   mapType,
   toImp,
+  isSubscriptionType,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
 
-const builtInScalars = ["Int", "Boolean", "String", "ID", "Float"];
-const GraphQLScalarTypeSymbol = imp("GraphQLScalarType@graphql");
-const GraphQLResolveInfo = imp("GraphQLResolveInfo@graphql");
+const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
+const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
+const GraphQLResolveInfoImp = imp("GraphQLResolveInfo@graphql");
+const GraphQLSchemaImp = imp("GraphQLSchema@graphql");
+const DocumentNodeImp = imp("DocumentNode@graphql");
+const GraphQLFieldResolverImp = imp("GraphQLFieldResolver@graphql");
+const ExecutionResultImp = imp("ExecutionResult@graphql");
 
 /**
  * Generates Resolver/server-side type definitions for an Apollo-based GraphQL implementation.
@@ -96,9 +101,9 @@ function generateTopLevelResolversType(
         return `${o.name}?: ${o.name}Resolvers;`;
       })} 
       ${scalars
-        .filter(s => !builtInScalars.includes(s.name))
+        .filter(s => !builtInScalarsImps.includes(s.name))
         .map(s => {
-          return code`${s.name}: ${GraphQLScalarTypeSymbol};`;
+          return code`${s.name}: ${GraphQLScalarTypeSymbolImp};`;
         })}
     }
   `;
@@ -131,13 +136,35 @@ function generateEachResolverType(
 
           const root = mapObjectType(config, type);
           const result = mapType(config, interfaceToImpls, f.type);
-          return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
+          if (isSubscriptionType(type)) {
+            return code`${f.name}: SubscriptionResolver<${root}, ${args}>;`;
+          } else {
+            return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
+          }
         })}
       }
     `);
   });
   chunks.push(code`
-    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfo}) => T | Promise<T>;
+    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => T | Promise<T>;
+  `);
+  // SubscriptionResolver.subscribe based on `SubscriptionArgs` and `subscribe` function
+  // defined in the "graphql" package.  We've added some typing for the rootValue, contextValue
+  // and variableValues.  Note: AsyncIterableIterator requires "esnext.asynciterable" to be defined
+  // in the "lib" property in tsconfig.json.
+  chunks.push(code`
+    export type SubscriptionResolver<R, A> = {
+      subscribe: (
+        schema: ${GraphQLSchemaImp},
+        document: ${DocumentNodeImp},
+        rootValue?: R,
+        contextValue?: ${ctx},
+        variableValues?: A,
+        operationName?: string,
+        fieldResolver?: ${GraphQLFieldResolverImp}<any, any>,
+        subscribeFieldResolver?: ${GraphQLFieldResolverImp}<any, any>,
+      ) => Promise<AsyncIterableIterator<${ExecutionResultImp}> | ${ExecutionResultImp}>;
+    };
   `);
   argDefs.forEach(a => chunks.push(a));
 }

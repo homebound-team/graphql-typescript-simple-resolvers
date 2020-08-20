@@ -1,22 +1,24 @@
 import { Context, AuthorId, Popularity } from "./entities";
-import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+import {
+  GraphQLResolveInfo,
+  GraphQLSchema,
+  DocumentNode,
+  GraphQLFieldResolver,
+  ExecutionResult,
+  GraphQLScalarType,
+} from "graphql";
 
 export interface Resolvers {
-  Query: QueryResolvers;
   Author: AuthorResolvers;
+  Query: QueryResolvers;
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
   Book?: BookResolvers;
-  SaveAuthorResult?: SaveAuthorResultResolvers;
   Container?: ContainerResolvers;
+  Subscription?: SubscriptionResolvers;
+  SaveAuthorResult?: SaveAuthorResultResolvers;
   Date: GraphQLScalarType;
   DateTime: GraphQLScalarType;
-}
-
-export interface QueryResolvers {
-  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
-  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface AuthorResolvers {
@@ -27,6 +29,12 @@ export interface AuthorResolvers {
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
   birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
   populate: Resolver<AuthorId, {}, boolean | null | undefined>;
+}
+
+export interface QueryResolvers {
+  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
 }
 
 export interface MutationResolvers {
@@ -44,10 +52,6 @@ export interface BookResolvers {
   reqUnionProp: Resolver<Book, {}, String | Boolean>;
 }
 
-export interface SaveAuthorResultResolvers {
-  author: Resolver<SaveAuthorResult, {}, AuthorId>;
-}
-
 export interface ContainerResolvers {
   thingOptional: Resolver<Container, {}, null | undefined | AuthorId | HasName>;
   thingRequired: Resolver<Container, {}, AuthorId | HasName>;
@@ -55,7 +59,29 @@ export interface ContainerResolvers {
   thingsRequired: Resolver<Container, {}, Array<AuthorId | HasName>>;
 }
 
+export interface SubscriptionResolvers {
+  authorSaved: SubscriptionResolver<Subscription, {}>;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs>;
+}
+
+export interface SaveAuthorResultResolvers {
+  author: Resolver<SaveAuthorResult, {}, AuthorId>;
+}
+
 export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
+
+export type SubscriptionResolver<R, A> = {
+  subscribe: (
+    schema: GraphQLSchema,
+    document: DocumentNode,
+    rootValue?: R,
+    contextValue?: Context,
+    variableValues?: A,
+    operationName?: string,
+    fieldResolver?: GraphQLFieldResolver<any, any>,
+    subscribeFieldResolver?: GraphQLFieldResolver<any, any>,
+  ) => Promise<AsyncIterableIterator<ExecutionResult> | ExecutionResult>;
+};
 
 export interface QueryAuthorsArgs {
   id?: string | null | undefined;
@@ -65,6 +91,9 @@ export interface QuerySearchArgs {
 }
 export interface MutationSaveAuthorArgs {
   input: AuthorInput;
+}
+export interface SubscriptionSearchSubArgs {
+  query: string;
 }
 export interface AuthorSummary {
   numberOfBooks: number;
@@ -77,15 +106,20 @@ export interface Book {
   reqUnionProp: String | Boolean;
 }
 
-export interface SaveAuthorResult {
-  author: AuthorId;
-}
-
 export interface Container {
   thingOptional: null | undefined | AuthorId | HasName;
   thingRequired: AuthorId | HasName;
   thingsOptional: Array<AuthorId | HasName> | null | undefined;
   thingsRequired: Array<AuthorId | HasName>;
+}
+
+export interface Subscription {
+  authorSaved: AuthorId;
+  searchSub: Array<AuthorId | Book>;
+}
+
+export interface SaveAuthorResult {
+  author: AuthorId;
 }
 
 export interface HasName {

@@ -1,4 +1,8 @@
-import { AuthorResolvers, ContainerResolvers } from "./graphql-types";
+import {
+  AuthorResolvers,
+  ContainerResolvers,
+  SubscriptionResolvers,
+} from "./graphql-types";
 
 const canReturnUndefined: Pick<AuthorResolvers, "birthday"> = {
   birthday() {
@@ -6,7 +10,10 @@ const canReturnUndefined: Pick<AuthorResolvers, "birthday"> = {
   },
 };
 
-const canReturnMappedTypesForInterfaces: Pick<ContainerResolvers, "thingOptional"> = {
+const canReturnMappedTypesForInterfaces: Pick<
+  ContainerResolvers,
+  "thingOptional"
+> = {
   thingOptional() {
     return "a:1";
   },
@@ -15,5 +22,22 @@ const canReturnMappedTypesForInterfaces: Pick<ContainerResolvers, "thingOptional
 const canInterfaceForInterfaces: Pick<ContainerResolvers, "thingOptional"> = {
   thingOptional() {
     return { name: "foo" };
+  },
+};
+
+const subInterfaces: Pick<SubscriptionResolvers, "authorSaved"> = {
+  authorSaved: {
+    subscribe: (
+      schema,
+      document,
+      root,
+      ctx,
+      vars,
+      operationName,
+      fieldResolver,
+      subscribeFieldResolver,
+    ) => {
+      return Promise.resolve({});
+    },
   },
 };
