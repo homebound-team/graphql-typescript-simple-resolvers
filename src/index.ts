@@ -29,10 +29,6 @@ import PluginOutput = Types.PluginOutput;
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
 const GraphQLResolveInfoImp = imp("GraphQLResolveInfo@graphql");
-const GraphQLSchemaImp = imp("GraphQLSchema@graphql");
-const DocumentNodeImp = imp("DocumentNode@graphql");
-const GraphQLFieldResolverImp = imp("GraphQLFieldResolver@graphql");
-const ExecutionResultImp = imp("ExecutionResult@graphql");
 
 /**
  * Generates Resolver/server-side type definitions for an Apollo-based GraphQL implementation.
@@ -137,7 +133,7 @@ function generateEachResolverType(
           const root = mapObjectType(config, type);
           const result = mapType(config, interfaceToImpls, f.type);
           if (isSubscriptionType(type)) {
-            return code`${f.name}: SubscriptionResolver<${root}, ${args}>;`;
+            return code`${f.name}: SubscriptionResolver<${root}, ${args}, ${result}>;`;
           } else {
             return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
           }
@@ -148,23 +144,15 @@ function generateEachResolverType(
   chunks.push(code`
     export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => T | Promise<T>;
   `);
-  // SubscriptionResolver.subscribe based on `SubscriptionArgs` and `subscribe` function
-  // defined in the "graphql" package.  We've added some typing for the rootValue, contextValue
-  // and variableValues.  Note: AsyncIterableIterator requires "esnext.asynciterable" to be defined
+  // SubscriptionResolver based on functions defined in the "graphql-subscriptions" package.
+  // We've added some typing for the rootValue, variableValues, and context.
+  // Note: AsyncIterableIterator requires "esnext.asynciterable" (or just "esnext") to be defined
   // in the "lib" property in tsconfig.json.
   chunks.push(code`
-    export type SubscriptionResolver<R, A> = {
-      subscribe: (
-        schema: ${GraphQLSchemaImp},
-        document: ${DocumentNodeImp},
-        rootValue?: R,
-        contextValue?: ${ctx},
-        variableValues?: A,
-        operationName?: string,
-        fieldResolver?: ${GraphQLFieldResolverImp}<any, any>,
-        subscribeFieldResolver?: ${GraphQLFieldResolverImp}<any, any>,
-      ) => Promise<AsyncIterableIterator<${ExecutionResultImp}> | ${ExecutionResultImp}>;
-    };
+    export type SubscriptionResolverFilter<R, A, T> = (root: R | undefined, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => boolean | Promise<boolean>;
+    export type SubscriptionResolver<R, A, T> = {
+      subscribe: (root: R | undefined, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => AsyncIterator<T>;
+    }
   `);
   argDefs.forEach(a => chunks.push(a));
 }

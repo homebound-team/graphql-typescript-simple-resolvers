@@ -1,12 +1,5 @@
 import { Context, AuthorId, Popularity } from "./entities";
-import {
-  GraphQLResolveInfo,
-  GraphQLSchema,
-  DocumentNode,
-  GraphQLFieldResolver,
-  ExecutionResult,
-  GraphQLScalarType,
-} from "graphql";
+import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
 export interface Resolvers {
   Author: AuthorResolvers;
@@ -60,8 +53,8 @@ export interface ContainerResolvers {
 }
 
 export interface SubscriptionResolvers {
-  authorSaved: SubscriptionResolver<Subscription, {}>;
-  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs>;
+  authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, Array<AuthorId | Book>>;
 }
 
 export interface SaveAuthorResultResolvers {
@@ -70,17 +63,14 @@ export interface SaveAuthorResultResolvers {
 
 export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
 
-export type SubscriptionResolver<R, A> = {
-  subscribe: (
-    schema: GraphQLSchema,
-    document: DocumentNode,
-    rootValue?: R,
-    contextValue?: Context,
-    variableValues?: A,
-    operationName?: string,
-    fieldResolver?: GraphQLFieldResolver<any, any>,
-    subscribeFieldResolver?: GraphQLFieldResolver<any, any>,
-  ) => Promise<AsyncIterableIterator<ExecutionResult> | ExecutionResult>;
+export type SubscriptionResolverFilter<R, A, T> = (
+  root: R | undefined,
+  args: A,
+  ctx: Context,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>;
+export type SubscriptionResolver<R, A, T> = {
+  subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
 };
 
 export interface QueryAuthorsArgs {
