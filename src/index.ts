@@ -192,7 +192,11 @@ function generateFieldSignature(
 
       const root = type instanceof GraphQLObjectType ? mapObjectType(config, type) : "T";
       const result = mapType(config, interfaceToImpls, f.type);
-      return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
+      if (isSubscriptionType(type)) {
+        return code`${f.name}: SubscriptionResolver<${root}, ${args}, ${result}>;`;
+      } else {
+        return code`${f.name}: Resolver<${root}, ${args}, ${result}>;`;
+      }
     });
 }
 

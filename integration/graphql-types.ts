@@ -63,8 +63,8 @@ export interface ContainerResolvers {
 }
 
 export interface SubscriptionResolvers {
-  authorSaved: Resolver<Subscription, {}, AuthorId>;
-  searchSub: Resolver<Subscription, SubscriptionSearchSubArgs, SearchResult[]>;
+  authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, SearchResult[]>;
 }
 
 export interface SaveAuthorResultResolvers {
