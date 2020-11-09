@@ -14,8 +14,18 @@ export interface Resolvers {
   DateTime: GraphQLScalarType;
 }
 
-export interface AuthorResolvers {
-  name: Resolver<AuthorId, {}, string>;
+export interface HasNameResolvers<T> {
+  name: Resolver<T, {}, string>;
+}
+
+export interface FieldWithArgsResolvers<T> {
+  field1: Resolver<T, FieldWithArgsField1Args, boolean | null | undefined>;
+}
+
+export interface FieldWithArgsField1Args {
+  input?: boolean | null | undefined;
+}
+export interface AuthorResolvers extends HasNameResolvers<AuthorId>, FieldWithArgsResolvers<AuthorId> {
   summary: Resolver<AuthorId, {}, AuthorSummary>;
   popularity: Resolver<AuthorId, {}, Popularity>;
   working: Resolver<AuthorId, {}, Working | null | undefined>;
@@ -27,7 +37,8 @@ export interface AuthorResolvers {
 export interface QueryResolvers {
   authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
   authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, Array<AuthorId | Book>>;
+  search: Resolver<{}, QuerySearchArgs, SearchResult[]>;
+  testUnionOfUnions: Resolver<{}, {}, UnionOfUnions | null | undefined>;
 }
 
 export interface MutationResolvers {
@@ -39,10 +50,9 @@ export interface AuthorSummaryResolvers {
   amountOfSales: Resolver<AuthorSummary, {}, number | null | undefined>;
 }
 
-export interface BookResolvers {
-  name: Resolver<Book, {}, string>;
-  unionProp: Resolver<Book, {}, null | undefined | String | Boolean>;
-  reqUnionProp: Resolver<Book, {}, String | Boolean>;
+export interface BookResolvers extends HasNameResolvers<Book>, FieldWithArgsResolvers<Book> {
+  unionProp: Resolver<Book, {}, UnionProp | null | undefined>;
+  reqUnionProp: Resolver<Book, {}, UnionProp>;
 }
 
 export interface ContainerResolvers {
@@ -53,8 +63,8 @@ export interface ContainerResolvers {
 }
 
 export interface SubscriptionResolvers {
-  authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
-  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, Array<AuthorId | Book>>;
+  authorSaved: Resolver<Subscription, {}, AuthorId>;
+  searchSub: Resolver<Subscription, SubscriptionSearchSubArgs, SearchResult[]>;
 }
 
 export interface SaveAuthorResultResolvers {
@@ -92,8 +102,9 @@ export interface AuthorSummary {
 
 export interface Book {
   name: string;
-  unionProp: null | undefined | String | Boolean;
-  reqUnionProp: String | Boolean;
+  unionProp: UnionProp | null | undefined;
+  reqUnionProp: UnionProp;
+  field1: boolean | null | undefined;
 }
 
 export interface Container {
@@ -105,7 +116,7 @@ export interface Container {
 
 export interface Subscription {
   authorSaved: AuthorId;
-  searchSub: Array<AuthorId | Book>;
+  searchSub: SearchResult[];
 }
 
 export interface SaveAuthorResult {
@@ -114,6 +125,10 @@ export interface SaveAuthorResult {
 
 export interface HasName {
   name: string;
+}
+
+export interface FieldWithArgs {
+  field1: boolean | null | undefined;
 }
 
 export interface AuthorInput {
@@ -126,3 +141,9 @@ export enum Working {
   Yes = "YES",
   No = "NO",
 }
+
+export type UnionProp = String | Boolean;
+
+export type SearchResult = AuthorId | Book;
+
+export type UnionOfUnions = UnionProp | SearchResult;

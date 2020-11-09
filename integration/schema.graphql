@@ -1,5 +1,5 @@
 # An entity that will be a mapped typed
-type Author implements HasName {
+type Author implements HasName & FieldWithArgs {
   name: String!
   summary: AuthorSummary!
   popularity: Popularity!
@@ -7,6 +7,7 @@ type Author implements HasName {
   birthday: Date
   birthdayPartyScheduled: DateTime
   populate: Boolean
+  field1(input: Boolean): Boolean
 }
 
 # A DTO that is just some fields
@@ -15,14 +16,20 @@ type AuthorSummary {
   amountOfSales: Float
 }
 
-type Book implements HasName {
+type Book implements HasName & FieldWithArgs {
   name: String!
   unionProp: UnionProp
   reqUnionProp: UnionProp!
+  field1(input: Boolean): Boolean
 }
 
 interface HasName {
   name: String!
+}
+
+# Check that interfaces with args generate a single args type
+interface FieldWithArgs {
+  field1(input: Boolean): Boolean
 }
 
 # Example of type that uses fields with interfaces
@@ -37,6 +44,8 @@ union UnionProp = String | Boolean
 
 union SearchResult = Author | Book
 
+union UnionOfUnions = UnionProp | SearchResult
+
 schema {
   query: Query
   mutation: Mutation
@@ -47,6 +56,7 @@ type Query {
   authors(id: ID): [Author!]!
   authorSummaries: [AuthorSummary!]!
   search(query: String!): [SearchResult!]!
+  testUnionOfUnions: UnionOfUnions
 }
 
 type Mutation {
