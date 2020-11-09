@@ -121,7 +121,7 @@ function generateEachInterfaceResolverType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   allTypesWithResolvers: GraphQLInterfaceType[],
-) {
+): void {
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach(type => {
     chunks.push(code`
@@ -138,7 +138,7 @@ function generateEachResolverType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   allTypesWithResolvers: GraphQLObjectType[],
-) {
+): void {
   const ctx = toImp(config.contextType);
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach(type => {
@@ -182,12 +182,12 @@ function generateFieldSignature(
       const args = f.args.length > 0 ? argsName : "{}";
       if (f.args.length > 0) {
         argDefs.push(code`
-              export interface ${argsName} {
-                ${f.args.map(a => {
-                  const maybeOptional = isNullableType(a.type) ? "?" : "";
-                  return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
-                })}
-              }`);
+          export interface ${argsName} {
+            ${f.args.map(a => {
+              const maybeOptional = isNullableType(a.type) ? "?" : "";
+              return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
+            })}
+          }`);
       }
 
       const root = type instanceof GraphQLObjectType ? mapObjectType(config, type) : "T";
@@ -200,7 +200,7 @@ function generateFieldSignature(
     });
 }
 
-function extendInterfaces(type: GraphQLObjectType, root: any) {
+function extendInterfaces(type: GraphQLObjectType, root: string): string {
   const interfaces = type
     .getInterfaces()
     .map(i => code`${i.name}Resolvers<${root}>`)
