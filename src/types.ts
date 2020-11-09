@@ -48,10 +48,7 @@ export function mapType(
         } else if (type instanceof GraphQLInputObjectType) {
           return type.name;
         } else if (type instanceof GraphQLUnionType) {
-          return joinCodes(
-            type.getTypes().map(t => mapObjectType(config, t)),
-            " | ",
-          );
+          return type.name;
         } else {
           throw new Error(`Unsupported type ${type}`);
         }
@@ -60,7 +57,7 @@ export function mapType(
   }
 }
 
-export function mapObjectType(config: Config, type: GraphQLObjectType): any {
+export function mapObjectType(config: Config, type: GraphQLNamedType): any {
   if (isQueryOrMutationType(type)) {
     return "{}";
   }
@@ -161,7 +158,7 @@ export function isMappedType(type: GraphQLNamedType, config: Config) {
 }
 
 /** A `.join(...)` that doesn't `toString()` elements so that they can stay codes. */
-function joinCodes(elements: unknown[], delimiter: string): unknown[] {
+export function joinCodes(elements: unknown[], delimiter: string): unknown[] {
   const result: unknown[] = [delimiter];
   for (let i = 0; i < elements.length; i++) {
     result.push(elements[i]);
