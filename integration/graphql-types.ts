@@ -25,6 +25,10 @@ export interface FieldWithArgsResolvers<T> {
 export interface FieldWithArgsField1Args {
   input?: boolean | null | undefined;
 }
+export type HasNameTypes = AuthorId | Book;
+
+export type FieldWithArgsTypes = AuthorId | Book;
+
 export interface AuthorResolvers extends HasNameResolvers<AuthorId>, FieldWithArgsResolvers<AuthorId> {
   summary: Resolver<AuthorId, {}, AuthorSummary>;
   popularity: Resolver<AuthorId, {}, Popularity>;
