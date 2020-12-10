@@ -1,3 +1,5 @@
+import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
+import { pascalCase } from "change-case";
 import {
   GraphQLInterfaceType,
   GraphQLNamedType,
@@ -8,10 +10,8 @@ import {
   isNullableType,
   isUnionType,
 } from "graphql";
-import { pascalCase } from "change-case";
-import { upperCaseFirst } from "upper-case-first";
 import { code, Code, imp } from "ts-poet";
-import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
+import { upperCaseFirst } from "upper-case-first";
 import {
   isEnumType,
   isInputObjectType,
@@ -21,11 +21,11 @@ import {
   isObjectType,
   isQueryOrMutationType,
   isScalarType,
+  isSubscriptionType,
+  joinCodes,
   mapObjectType,
   mapType,
   toImp,
-  isSubscriptionType,
-  joinCodes,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
 
@@ -72,6 +72,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
 
   // Make generic resolvers for interfaces
   generateEachInterfaceResolverType(chunks, config, interfaceToImpls, interfaceTypes);
+
+  // Make union types of interfaces
+  generateInterfaceUnionTypes(chunks, config, interfaceToImpls);
 
   // Make each resolver for any output type, whether its required or optional
   generateEachResolverType(chunks, config, interfaceToImpls, allTypesWithResolvers);
@@ -131,6 +134,22 @@ function generateEachInterfaceResolverType(
     `);
   });
   argDefs.forEach(a => chunks.push(a));
+}
+
+// Also add type unions of the possible types for use in code if desired
+function generateInterfaceUnionTypes(
+  chunks: Code[],
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+): void {
+  interfaceToImpls.forEach((impls, inter) =>
+    chunks.push(code`
+  export type ${inter.name}Types = ${joinCodes(
+      impls.map(imp => code`${mapObjectType(config, imp)}`),
+      " | ",
+    )};
+  `),
+  );
 }
 
 function generateEachResolverType(
