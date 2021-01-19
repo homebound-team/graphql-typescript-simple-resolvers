@@ -27,33 +27,37 @@ export function mapType(
   } else {
     // Mark whatever type we're on as assumed-nullable, which will be stripped
     // if we're wrapped by a GraphQLNonNull type.
-    return nullableOf(
-      (() => {
-        if (type instanceof GraphQLList) {
-          const elementType = mapType(config, interfaceToImpls, type.ofType);
-          // Union types will be an array and need `Array<...>`.
-          if (elementType instanceof Array) {
-            return code`Array<${elementType}>`;
-          } else {
-            return code`${elementType}[]`;
-          }
-        } else if (type instanceof GraphQLObjectType) {
-          return mapObjectType(config, type);
-        } else if (type instanceof GraphQLInterfaceType) {
-          return mapInterfaceType(config, interfaceToImpls, type);
-        } else if (type instanceof GraphQLScalarType) {
-          return mapScalarType(config, type);
-        } else if (type instanceof GraphQLEnumType) {
-          return mapEnumType(config, type);
-        } else if (type instanceof GraphQLInputObjectType) {
-          return type.name;
-        } else if (type instanceof GraphQLUnionType) {
-          return type.name;
-        } else {
-          throw new Error(`Unsupported type ${type}`);
-        }
-      })(),
-    );
+    return nullableOf((() => mapTypeNonNullable(config, interfaceToImpls, type))());
+  }
+}
+
+export function mapTypeNonNullable(
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  type: GraphQLOutputType | GraphQLInputObjectType,
+) {
+  if (type instanceof GraphQLList) {
+    const elementType = mapType(config, interfaceToImpls, type.ofType);
+    // Union types will be an array and need `Array<...>`.
+    if (elementType instanceof Array) {
+      return code`Array<${elementType}>`;
+    } else {
+      return code`${elementType}[]`;
+    }
+  } else if (type instanceof GraphQLObjectType) {
+    return mapObjectType(config, type);
+  } else if (type instanceof GraphQLInterfaceType) {
+    return mapInterfaceType(config, interfaceToImpls, type);
+  } else if (type instanceof GraphQLScalarType) {
+    return mapScalarType(config, type);
+  } else if (type instanceof GraphQLEnumType) {
+    return mapEnumType(config, type);
+  } else if (type instanceof GraphQLInputObjectType) {
+    return type.name;
+  } else if (type instanceof GraphQLUnionType) {
+    return type.name;
+  } else {
+    throw new Error(`Unsupported type ${type}`);
   }
 }
 

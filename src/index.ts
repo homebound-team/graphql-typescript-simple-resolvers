@@ -25,6 +25,7 @@ import {
   joinCodes,
   mapObjectType,
   mapType,
+  mapTypeNonNullable,
   toImp,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
@@ -89,7 +90,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   generateEnums(chunks, config, schema);
 
   // Union Types
-  generateUnionTypes(chunks, config, schema);
+  generateUnionTypes(chunks, config, interfaceToImpls, schema);
 
   const content = await code`${chunks}`.toStringWithImports();
   return { content } as PluginOutput;
@@ -286,14 +287,19 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
     });
 }
 
-function generateUnionTypes(chunks: Code[], config: Config, schema: GraphQLSchema): void {
+function generateUnionTypes(
+  chunks: Code[],
+  config: Config,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+  schema: GraphQLSchema,
+): void {
   Object.values(schema.getTypeMap())
     .filter(isUnionType)
     .filter(isNotMetadataType)
     .forEach(type => {
       chunks.push(code`
         export type ${type.name} = ${joinCodes(
-        type.getTypes().map(t => mapObjectType(config, t)),
+        type.getTypes().map(t => mapTypeNonNullable(config, interfaceToImpls, t)),
         " | ",
       )}
       `);
