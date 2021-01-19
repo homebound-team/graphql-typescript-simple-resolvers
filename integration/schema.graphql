@@ -46,6 +46,8 @@ union SearchResult = Author | Book
 
 union UnionOfUnions = UnionProp | SearchResult
 
+union UnionWithPrimitives = String | Boolean | Author
+
 schema {
   query: Query
   mutation: Mutation

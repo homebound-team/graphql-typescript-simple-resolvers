@@ -146,8 +146,10 @@ export enum Working {
   No = "NO",
 }
 
-export type UnionProp = String | Boolean;
+export type UnionProp = string | boolean;
 
 export type SearchResult = AuthorId | Book;
 
 export type UnionOfUnions = UnionProp | SearchResult;
+
+export type UnionWithPrimitives = string | boolean | AuthorId;
