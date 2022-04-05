@@ -205,13 +205,13 @@ function generateFieldSignature(
           export interface ${argsName} {
             ${f.args.map(a => {
               const maybeOptional = isNullableType(a.type) ? "?" : "";
-              return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
+              return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type, true)}; `;
             })}
           }`);
       }
 
       const root = type instanceof GraphQLObjectType ? mapObjectType(config, type) : "T";
-      const result = mapType(config, interfaceToImpls, f.type);
+      const result = mapType(config, interfaceToImpls, f.type, true);
       if (isSubscriptionType(type)) {
         return code`${f.name}: SubscriptionResolver<${root}, ${args}, ${result}>;`;
       } else {

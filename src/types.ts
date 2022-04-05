@@ -20,14 +20,15 @@ export function mapType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   type: GraphQLOutputType | GraphQLInputObjectType,
+  isForOutputType: boolean = false,
 ): any {
   if (isNonNullType(type)) {
     // Recurse and assume our recursion will come back nullable, which we strip.
-    return stripNullable(mapType(config, interfaceToImpls, type.ofType));
+    return stripNullable(mapType(config, interfaceToImpls, type.ofType, isForOutputType));
   } else {
     // Mark whatever type we're on as assumed-nullable, which will be stripped
     // if we're wrapped by a GraphQLNonNull type.
-    return nullableOf((() => mapTypeNonNullable(config, interfaceToImpls, type))());
+    return nullableOf((() => mapTypeNonNullable(config, interfaceToImpls, type, isForOutputType))());
   }
 }
 
@@ -35,14 +36,15 @@ export function mapTypeNonNullable(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   type: GraphQLOutputType | GraphQLInputObjectType,
+  isForOutputType: boolean = false,
 ) {
   if (type instanceof GraphQLList) {
-    const elementType = mapType(config, interfaceToImpls, type.ofType);
+    const elementType = mapType(config, interfaceToImpls, type.ofType, isForOutputType);
     // Union types will be an array and need `Array<...>`.
     if (elementType instanceof Array) {
-      return code`Array<${elementType}>`;
+      return code`${isForOutputType ? "Readonly" : ""}Array<${elementType}>`;
     } else {
-      return code`${elementType}[]`;
+      return code`${isForOutputType ? "readonly " : ""}${elementType}[]`;
     }
   } else if (type instanceof GraphQLObjectType) {
     return mapObjectType(config, type);
