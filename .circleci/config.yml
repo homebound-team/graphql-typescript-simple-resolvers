@@ -8,9 +8,13 @@ workflows:
   workflow:
     jobs:
       - build:
-          context: npm-readonly
+          context:
+            - npm-readonly
+            - github
       - publish:
-          context: npm-publish
+          context:
+            - npm-publish
+            - github
           requires:
             - build
           filters:
