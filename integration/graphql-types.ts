@@ -39,9 +39,9 @@ export interface AuthorResolvers extends HasNameResolvers<AuthorId>, FieldWithAr
 }
 
 export interface QueryResolvers {
-  authors: Resolver<{}, QueryAuthorsArgs, readonly AuthorId[]>;
-  authorSummaries: Resolver<{}, {}, readonly AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, readonly SearchResult[]>;
+  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, SearchResult[]>;
   testUnionOfUnions: Resolver<{}, {}, UnionOfUnions | null | undefined>;
 }
 
@@ -62,20 +62,26 @@ export interface BookResolvers extends HasNameResolvers<Book>, FieldWithArgsReso
 export interface ContainerResolvers {
   thingOptional: Resolver<Container, {}, null | undefined | AuthorId | HasName>;
   thingRequired: Resolver<Container, {}, AuthorId | HasName>;
-  thingsOptional: Resolver<Container, {}, ReadonlyArray<AuthorId | HasName> | null | undefined>;
-  thingsRequired: Resolver<Container, {}, ReadonlyArray<AuthorId | HasName>>;
+  thingsOptional: Resolver<Container, {}, Array<AuthorId | HasName> | null | undefined>;
+  thingsRequired: Resolver<Container, {}, Array<AuthorId | HasName>>;
 }
 
 export interface SubscriptionResolvers {
   authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
-  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, readonly SearchResult[]>;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, SearchResult[]>;
 }
 
 export interface SaveAuthorResultResolvers {
   author: Resolver<SaveAuthorResult, {}, AuthorId>;
 }
 
-export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => T | Promise<T>;
+type MaybePromise<T> = T | Promise<T>;
+export type Resolver<R, A, T> = (
+  root: R,
+  args: A,
+  ctx: Context,
+  info: GraphQLResolveInfo,
+) => MaybePromise<T extends Array<infer U> ? readonly U[] : T>;
 
 export type SubscriptionResolverFilter<R, A, T> = (
   root: R | undefined,
