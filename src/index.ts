@@ -170,7 +170,8 @@ function generateEachResolverType(
     `);
   });
   chunks.push(code`
-    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => T | Promise<T>;
+    type MaybePromise<T> = T | Promise<T>;
+    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => MaybePromise<T extends Array<infer U> ? readonly U[] : T>;
   `);
   // SubscriptionResolver based on functions defined in the "graphql-subscriptions" package.
   // We've added some typing for the rootValue, variableValues, and context.
@@ -205,13 +206,13 @@ function generateFieldSignature(
           export interface ${argsName} {
             ${f.args.map(a => {
               const maybeOptional = isNullableType(a.type) ? "?" : "";
-              return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type, true)}; `;
+              return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
             })}
           }`);
       }
 
       const root = type instanceof GraphQLObjectType ? mapObjectType(config, type) : "T";
-      const result = mapType(config, interfaceToImpls, f.type, true);
+      const result = mapType(config, interfaceToImpls, f.type);
       if (isSubscriptionType(type)) {
         return code`${f.name}: SubscriptionResolver<${root}, ${args}, ${result}>;`;
       } else {
