@@ -29,6 +29,15 @@ export type HasNameTypes = AuthorId | Book;
 
 export type FieldWithArgsTypes = AuthorId | Book;
 
+export type UnionResolvers = {
+  UnionProp: { __resolveType(o: String | Boolean): string };
+  SearchResult: { __resolveType(o: AuthorId | Book): string };
+  UnionOfUnions: { __resolveType(o: UnionProp | SearchResult): string };
+  UnionWithPrimitives: { __resolveType(o: String | Boolean | AuthorId): string };
+  HasName: { __resolveType(o: AuthorId | Book): string };
+  FieldWithArgs: { __resolveType(o: AuthorId | Book): string };
+};
+
 export interface AuthorResolvers extends HasNameResolvers<AuthorId>, FieldWithArgsResolvers<AuthorId> {
   summary: Resolver<AuthorId, {}, AuthorSummary>;
   popularity: Resolver<AuthorId, {}, Popularity>;
