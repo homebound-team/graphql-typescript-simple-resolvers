@@ -6,6 +6,7 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
+  GraphQLUnionType,
   isInterfaceType,
   isNullableType,
   isUnionType,
@@ -29,6 +30,7 @@ import {
   toImp,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
+import { TypeMap } from "graphql/type/schema";
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
@@ -76,6 +78,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
 
   // Make union types of interfaces
   generateInterfaceUnionTypes(chunks, config, interfaceToImpls);
+
+  // Make a UnionsResolver to ensure we have __resolveTypes
+  generateUnionResolvers(chunks, config, schema.getTypeMap(), interfaceToImpls);
 
   // Make each resolver for any output type, whether its required or optional
   generateEachResolverType(chunks, config, interfaceToImpls, allTypesWithResolvers);
@@ -151,6 +156,30 @@ function generateInterfaceUnionTypes(
     )};
   `),
   );
+}
+
+// Create a `UnionResolvers` with all unions/interfaces we might be asked to disambiguate.
+function generateUnionResolvers(
+  chunks: Code[],
+  config: Config,
+  typeMap: TypeMap,
+  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
+): void {
+  const unions = Object.values(typeMap)
+    .filter(t => isUnionType(t))
+    .map(ut => {
+      const types = (ut as GraphQLUnionType).getTypes().map(t => code`${mapObjectType(config, t)}`);
+      return code`${ut.name}: { __resolveType(o: ${joinCodes(types, "|")}): string; };`;
+    });
+  interfaceToImpls.forEach((objects, inter) => {
+    const types = objects.map(t => code`${mapObjectType(config, t)}`);
+    unions.push(code`${inter.name}: { __resolveType(o: ${joinCodes(types, "|")}): string; };`);
+  });
+  chunks.push(code`
+    export type UnionResolvers = {
+      ${unions}
+    }
+  `);
 }
 
 function generateEachResolverType(
