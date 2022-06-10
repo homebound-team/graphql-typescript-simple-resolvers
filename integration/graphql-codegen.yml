@@ -9,6 +9,7 @@ generates:
         DateTime: Date
       mappers:
         Author: "./entities#AuthorId"
+        Book: "./entities#Book"
       enumValues:
         Popularity: "./entities#Popularity"
     plugins:

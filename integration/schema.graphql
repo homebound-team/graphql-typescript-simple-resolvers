@@ -8,6 +8,7 @@ type Author implements HasName & FieldWithArgs {
   birthdayPartyScheduled: DateTime
   populate: Boolean
   field1(input: Boolean): Boolean
+  books: [Book!]!
 }
 
 # A DTO that is just some fields
@@ -76,6 +77,8 @@ type SaveAuthorResult {
 
 input AuthorInput {
   name: String
+  bookIds: [ID!]
+  bookIds2: [ID]
 }
 
 enum Popularity {

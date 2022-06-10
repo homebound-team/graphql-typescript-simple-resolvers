@@ -1,12 +1,12 @@
-import { Context, AuthorId, Popularity } from "./entities";
+import { Context, AuthorId, Book, Popularity } from "./entities";
 import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
 export interface Resolvers {
   Author: AuthorResolvers;
+  Book: BookResolvers;
   Query: QueryResolvers;
   Mutation: MutationResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
-  Book?: BookResolvers;
   Container?: ContainerResolvers;
   Subscription?: SubscriptionResolvers;
   SaveAuthorResult?: SaveAuthorResultResolvers;
@@ -45,12 +45,18 @@ export interface AuthorResolvers extends HasNameResolvers<AuthorId>, FieldWithAr
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
   birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
   populate: Resolver<AuthorId, {}, boolean | null | undefined>;
+  books: Resolver<AuthorId, {}, readonly Book[]>;
+}
+
+export interface BookResolvers extends HasNameResolvers<Book>, FieldWithArgsResolvers<Book> {
+  unionProp: Resolver<Book, {}, UnionProp | null | undefined>;
+  reqUnionProp: Resolver<Book, {}, UnionProp>;
 }
 
 export interface QueryResolvers {
-  authors: Resolver<{}, QueryAuthorsArgs, AuthorId[]>;
-  authorSummaries: Resolver<{}, {}, AuthorSummary[]>;
-  search: Resolver<{}, QuerySearchArgs, SearchResult[]>;
+  authors: Resolver<{}, QueryAuthorsArgs, readonly AuthorId[]>;
+  authorSummaries: Resolver<{}, {}, readonly AuthorSummary[]>;
+  search: Resolver<{}, QuerySearchArgs, readonly SearchResult[]>;
   testUnionOfUnions: Resolver<{}, {}, UnionOfUnions | null | undefined>;
 }
 
@@ -63,21 +69,16 @@ export interface AuthorSummaryResolvers {
   amountOfSales: Resolver<AuthorSummary, {}, number | null | undefined>;
 }
 
-export interface BookResolvers extends HasNameResolvers<Book>, FieldWithArgsResolvers<Book> {
-  unionProp: Resolver<Book, {}, UnionProp | null | undefined>;
-  reqUnionProp: Resolver<Book, {}, UnionProp>;
-}
-
 export interface ContainerResolvers {
-  thingOptional: Resolver<Container, {}, null | undefined | AuthorId | HasName>;
-  thingRequired: Resolver<Container, {}, AuthorId | HasName>;
-  thingsOptional: Resolver<Container, {}, Array<AuthorId | HasName> | null | undefined>;
-  thingsRequired: Resolver<Container, {}, Array<AuthorId | HasName>>;
+  thingOptional: Resolver<Container, {}, AuthorId | Book | HasName | null | undefined>;
+  thingRequired: Resolver<Container, {}, AuthorId | Book | HasName>;
+  thingsOptional: Resolver<Container, {}, ReadonlyArray<AuthorId | Book | HasName> | null | undefined>;
+  thingsRequired: Resolver<Container, {}, ReadonlyArray<AuthorId | Book | HasName>>;
 }
 
 export interface SubscriptionResolvers {
   authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
-  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, SearchResult[]>;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, readonly SearchResult[]>;
 }
 
 export interface SaveAuthorResultResolvers {
@@ -85,12 +86,7 @@ export interface SaveAuthorResultResolvers {
 }
 
 type MaybePromise<T> = T | Promise<T>;
-export type Resolver<R, A, T> = (
-  root: R,
-  args: A,
-  ctx: Context,
-  info: GraphQLResolveInfo,
-) => MaybePromise<T extends Array<infer U> ? readonly U[] : T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
 
 export type SubscriptionResolverFilter<R, A, T> = (
   root: R | undefined,
@@ -119,23 +115,16 @@ export interface AuthorSummary {
   amountOfSales: number | null | undefined;
 }
 
-export interface Book {
-  name: string;
-  unionProp: UnionProp | null | undefined;
-  reqUnionProp: UnionProp;
-  field1: boolean | null | undefined;
-}
-
 export interface Container {
-  thingOptional: null | undefined | AuthorId | HasName;
-  thingRequired: AuthorId | HasName;
-  thingsOptional: Array<AuthorId | HasName> | null | undefined;
-  thingsRequired: Array<AuthorId | HasName>;
+  thingOptional: AuthorId | Book | HasName | null | undefined;
+  thingRequired: AuthorId | Book | HasName;
+  thingsOptional: ReadonlyArray<AuthorId | Book | HasName> | null | undefined;
+  thingsRequired: ReadonlyArray<AuthorId | Book | HasName>;
 }
 
 export interface Subscription {
   authorSaved: AuthorId;
-  searchSub: SearchResult[];
+  searchSub: readonly SearchResult[];
 }
 
 export interface SaveAuthorResult {
@@ -152,6 +141,8 @@ export interface FieldWithArgs {
 
 export interface AuthorInput {
   name?: string | null | undefined;
+  bookIds?: string[] | null | undefined;
+  bookIds2?: Array<string | null | undefined> | null | undefined;
 }
 
 export { Popularity } from "./entities";
@@ -161,10 +152,10 @@ export enum Working {
   No = "NO",
 }
 
-export type UnionProp = string | boolean;
+export type UnionProp = string | null | undefined | boolean | null | undefined;
 
-export type SearchResult = AuthorId | Book;
+export type SearchResult = AuthorId | null | undefined | Book | null | undefined;
 
-export type UnionOfUnions = UnionProp | SearchResult;
+export type UnionOfUnions = UnionProp | null | undefined | SearchResult | null | undefined;
 
-export type UnionWithPrimitives = string | boolean | AuthorId;
+export type UnionWithPrimitives = string | null | undefined | boolean | null | undefined | AuthorId | null | undefined;
