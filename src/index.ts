@@ -26,7 +26,6 @@ import {
   joinCodes,
   mapObjectType,
   mapType,
-  mapTypeNonNullable,
   toImp,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
@@ -200,7 +199,7 @@ function generateEachResolverType(
   });
   chunks.push(code`
     type MaybePromise<T> = T | Promise<T>;
-    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => MaybePromise<T extends Array<infer U> ? readonly U[] : T>;
+    export type Resolver<R, A, T> = (root: R, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => MaybePromise<T>;
   `);
   // SubscriptionResolver based on functions defined in the "graphql-subscriptions" package.
   // We've added some typing for the rootValue, variableValues, and context.
@@ -289,7 +288,7 @@ function generateInputTypes(
           ${Object.values(type.getFields()).map(f => {
             const isNonNull = isNonNullType(f.type);
             const maybeOptional = !isNonNull ? "?" : "";
-            return code`${f.name}${maybeOptional}: ${mapType(config, interfaceToImpls, f.type)};`;
+            return code`${f.name}${maybeOptional}: ${mapType(config, interfaceToImpls, f.type, true)};`;
           })}
         }
     `);
@@ -329,7 +328,7 @@ function generateUnionTypes(
     .forEach(type => {
       chunks.push(code`
         export type ${type.name} = ${joinCodes(
-        type.getTypes().map(t => mapTypeNonNullable(config, interfaceToImpls, t)),
+        type.getTypes().map(t => mapType(config, interfaceToImpls, t, false)),
         " | ",
       )}
       `);

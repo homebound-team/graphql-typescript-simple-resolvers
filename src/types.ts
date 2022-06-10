@@ -10,52 +10,48 @@ import {
   GraphQLScalarType,
   GraphQLUnionType,
 } from "graphql";
-import { code, imp } from "ts-poet";
+import { Code, code, imp } from "ts-poet";
 import { Config } from "./index";
-
-const NULLABLE_TYPES = "| null | undefined";
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
 export function mapType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   type: GraphQLOutputType | GraphQLInputObjectType,
-): any {
-  if (isNonNullType(type)) {
-    // Recurse and assume our recursion will come back nullable, which we strip.
-    return stripNullable(mapType(config, interfaceToImpls, type.ofType));
-  } else {
-    // Mark whatever type we're on as assumed-nullable, which will be stripped
-    // if we're wrapped by a GraphQLNonNull type.
-    return nullableOf((() => mapTypeNonNullable(config, interfaceToImpls, type))());
+  isInput = false,
+  isNullable = true,
+): Code {
+  // GraphQL types default to nullable, unless we have a parent GraphQLNonNull that told us not to be
+  function maybeNull(type: Code) {
+    return isNullable ? code`${type} | null | undefined` : type;
   }
-}
-
-export function mapTypeNonNullable(
-  config: Config,
-  interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
-  type: GraphQLOutputType | GraphQLInputObjectType,
-) {
-  if (type instanceof GraphQLList) {
-    const elementType = mapType(config, interfaceToImpls, type.ofType);
-    // Union types will be an array and need `Array<...>`.
-    if (elementType instanceof Array) {
-      return code`Array<${elementType}>`;
+  if (isNonNullType(type)) {
+    return mapType(config, interfaceToImpls, type.ofType, isInput, false);
+  } else if (type instanceof GraphQLList) {
+    const elementType = mapType(config, interfaceToImpls, type.ofType, isInput);
+    const isUnion =
+      type.ofType instanceof GraphQLInterfaceType ||
+      (type.ofType instanceof GraphQLNonNull && type.ofType.ofType instanceof GraphQLInterfaceType);
+    const isNullable = !(type.ofType instanceof GraphQLNonNull);
+    if (isUnion || isNullable) {
+      const maybeReadonly = isInput ? "" : "Readonly";
+      return maybeNull(code`${maybeReadonly}Array<${elementType}>`);
     } else {
-      return code`${elementType}[]`;
+      const maybeReadonly = isInput ? "" : "readonly ";
+      return maybeNull(code`${maybeReadonly}${elementType}[]`);
     }
   } else if (type instanceof GraphQLObjectType) {
-    return mapObjectType(config, type);
+    return maybeNull(code`${mapObjectType(config, type)}`);
   } else if (type instanceof GraphQLInterfaceType) {
-    return mapInterfaceType(config, interfaceToImpls, type);
+    return maybeNull(code`${mapInterfaceType(config, interfaceToImpls, type)}`);
   } else if (type instanceof GraphQLScalarType) {
-    return mapScalarType(config, type);
+    return maybeNull(code`${mapScalarType(config, type)}`);
   } else if (type instanceof GraphQLEnumType) {
-    return mapEnumType(config, type);
+    return maybeNull(code`${mapEnumType(config, type)}`);
   } else if (type instanceof GraphQLInputObjectType) {
-    return type.name;
+    return maybeNull(code`${type.name}`);
   } else if (type instanceof GraphQLUnionType) {
-    return type.name;
+    return maybeNull(code`${type.name}`);
   } else {
     throw new Error(`Unsupported type ${type}`);
   }
@@ -96,23 +92,6 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string {
     return "boolean";
   } else {
     return config.scalars[type.name] || type.name.toString();
-  }
-}
-
-/** Marks `type` as nullable in a way that both will be output correctly by ts-poet + can be undone. */
-function nullableOf(type: unknown): unknown {
-  // We allow `| undefined` because it's handy for server impls that want to treat
-  // `null` in the database as `undefined`, and the graphql.js runtime will turn
-  // `undefined` into `null` for us anyway.
-  return [type, NULLABLE_TYPES];
-}
-
-/** Unmarks `type` as nullable, i.e. types are always nullable until unwrapped by a GraphQLNonNull parent. */
-function stripNullable(type: unknown): unknown {
-  if (type instanceof Array && type.length == 2 && type[1] === NULLABLE_TYPES) {
-    return type[0];
-  } else {
-    return type;
   }
 }
 
