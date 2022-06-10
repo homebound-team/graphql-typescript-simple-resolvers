@@ -152,10 +152,10 @@ export enum Working {
   No = "NO",
 }
 
-export type UnionProp = string | null | undefined | boolean | null | undefined;
+export type UnionProp = string | boolean;
 
-export type SearchResult = AuthorId | null | undefined | Book | null | undefined;
+export type SearchResult = AuthorId | Book;
 
-export type UnionOfUnions = UnionProp | null | undefined | SearchResult | null | undefined;
+export type UnionOfUnions = UnionProp | SearchResult;
 
-export type UnionWithPrimitives = string | null | undefined | boolean | null | undefined | AuthorId | null | undefined;
+export type UnionWithPrimitives = string | boolean | AuthorId;

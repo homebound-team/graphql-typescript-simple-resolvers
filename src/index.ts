@@ -328,7 +328,7 @@ function generateUnionTypes(
     .forEach(type => {
       chunks.push(code`
         export type ${type.name} = ${joinCodes(
-        type.getTypes().map(t => mapType(config, interfaceToImpls, t, false)),
+        type.getTypes().map(t => mapType(config, interfaceToImpls, t, false, false)),
         " | ",
       )}
       `);
