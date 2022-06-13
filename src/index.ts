@@ -267,7 +267,7 @@ function generateDtosForNonMappedTypes(
     chunks.push(code`
       export interface ${type.name} {
         ${Object.values(type.getFields()).map(f => {
-          return code`${f.name}: ${mapType(config, interfaceToImpls, f.type)};`;
+          return code`${f.name}: ${mapType(config, interfaceToImpls, f.type, true)};`;
         })}
       }
     `);

@@ -18,7 +18,7 @@ export function mapType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   type: GraphQLOutputType | GraphQLInputObjectType,
-  isInput = false,
+  isInputOrDto = false,
   isNullable = true,
 ): Code {
   // GraphQL types default to nullable, unless we have a parent GraphQLNonNull that told us not to be
@@ -26,18 +26,18 @@ export function mapType(
     return isNullable ? code`${type} | null | undefined` : type;
   }
   if (isNonNullType(type)) {
-    return mapType(config, interfaceToImpls, type.ofType, isInput, false);
+    return mapType(config, interfaceToImpls, type.ofType, isInputOrDto, false);
   } else if (type instanceof GraphQLList) {
-    const elementType = mapType(config, interfaceToImpls, type.ofType, isInput);
+    const elementType = mapType(config, interfaceToImpls, type.ofType, isInputOrDto);
     const isUnion =
       type.ofType instanceof GraphQLInterfaceType ||
       (type.ofType instanceof GraphQLNonNull && type.ofType.ofType instanceof GraphQLInterfaceType);
     const isNullable = !(type.ofType instanceof GraphQLNonNull);
     if (isUnion || isNullable) {
-      const maybeReadonly = isInput ? "" : "Readonly";
+      const maybeReadonly = isInputOrDto ? "" : "Readonly";
       return maybeNull(code`${maybeReadonly}Array<${elementType}>`);
     } else {
-      const maybeReadonly = isInput ? "" : "readonly ";
+      const maybeReadonly = isInputOrDto ? "" : "readonly ";
       return maybeNull(code`${maybeReadonly}${elementType}[]`);
     }
   } else if (type instanceof GraphQLObjectType) {

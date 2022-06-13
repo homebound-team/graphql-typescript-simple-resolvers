@@ -118,13 +118,13 @@ export interface AuthorSummary {
 export interface Container {
   thingOptional: AuthorId | Book | HasName | null | undefined;
   thingRequired: AuthorId | Book | HasName;
-  thingsOptional: ReadonlyArray<AuthorId | Book | HasName> | null | undefined;
-  thingsRequired: ReadonlyArray<AuthorId | Book | HasName>;
+  thingsOptional: Array<AuthorId | Book | HasName> | null | undefined;
+  thingsRequired: Array<AuthorId | Book | HasName>;
 }
 
 export interface Subscription {
   authorSaved: AuthorId;
-  searchSub: readonly SearchResult[];
+  searchSub: SearchResult[];
 }
 
 export interface SaveAuthorResult {
