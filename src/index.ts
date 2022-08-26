@@ -11,7 +11,7 @@ import {
   isNullableType,
   isUnionType,
 } from "graphql";
-import { code, Code, imp } from "ts-poet";
+import { code, Code, imp, joinCode } from "ts-poet";
 import { upperCaseFirst } from "upper-case-first";
 import {
   isEnumType,
@@ -249,12 +249,12 @@ function generateFieldSignature(
     });
 }
 
-function extendInterfaces(type: GraphQLObjectType, root: string): string {
-  const interfaces = type
-    .getInterfaces()
-    .map(i => code`${i.name}Resolvers<${root}>`)
-    .join(", ");
-  return interfaces ? `extends ${interfaces}` : "";
+function extendInterfaces(type: GraphQLObjectType, root: string): Code {
+  const interfaces = joinCode(
+    type.getInterfaces().map(i => code`${i.name}Resolvers<${root}>`),
+    { on: ", " },
+  );
+  return interfaces ? code`extends ${interfaces}` : code``;
 }
 
 function generateDtosForNonMappedTypes(
