@@ -4,10 +4,10 @@
   "main": "./build/index.js",
   "types": "./build/",
   "scripts": {
-    "build": "rm -rf build; ./node_modules/.bin/tsc",
-    "prepare": "yarn build",
-    "test": "./node_modules/.bin/jest --watch",
-    "coverage": "./node_modules/.bin/jest --collectCoverage",
+    "build": "rm -rf build; tsc",
+    "prepack": "yarn build",
+    "test": "jest --watch",
+    "coverage": "jest --collectCoverage",
     "format": "prettier --write 'src/**/*.{ts,js,tsx,jsx}'",
     "graphql-codegen": "rm integration/graphql-types.ts; graphql-codegen --config integration/graphql-codegen.yml"
   },
