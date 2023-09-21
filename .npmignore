@@ -1,3 +1,13 @@
+/build/integration/
 /src
 /.idea
 /.circleci
+/.yarn
+/integration
+/.nvmrc
+/.pretterrc.js
+/.yarnrc.yml
+/bump.sh
+/yarn.lock
+/package.json.bak
+/tsconfig.json
