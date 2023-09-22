@@ -1,5 +1,5 @@
-import { AuthorId, Book, Context, Popularity } from "./entities";
 import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+import { AuthorId, Book, Context, Popularity } from "./entities";
 
 export interface Resolvers {
   Author: AuthorResolvers;
@@ -33,15 +33,12 @@ export type UnionResolvers = {
   SearchResult: { __resolveType(o: AuthorId | Book): string };
   UnionOfUnions: { __resolveType(o: SearchResult | UnionProp): string };
   UnionProp: { __resolveType(o: Boolean | String): string };
-  UnionWithPrimitives: {
-    __resolveType(o: AuthorId | Boolean | String): string;
-  };
+  UnionWithPrimitives: { __resolveType(o: AuthorId | Boolean | String): string };
   FieldWithArgs: { __resolveType(o: AuthorId | Book): string };
   HasName: { __resolveType(o: AuthorId | Book): string };
 };
 
-export interface AuthorResolvers
-  extends FieldWithArgsResolvers<AuthorId>, HasNameResolvers<AuthorId> {
+export interface AuthorResolvers extends FieldWithArgsResolvers<AuthorId>, HasNameResolvers<AuthorId> {
   birthday: Resolver<AuthorId, {}, Date | null | undefined>;
   birthdayPartyScheduled: Resolver<AuthorId, {}, Date | null | undefined>;
   books: Resolver<AuthorId, {}, readonly Book[]>;
@@ -51,8 +48,7 @@ export interface AuthorResolvers
   working: Resolver<AuthorId, {}, Working | null | undefined>;
 }
 
-export interface BookResolvers
-  extends FieldWithArgsResolvers<Book>, HasNameResolvers<Book> {
+export interface BookResolvers extends FieldWithArgsResolvers<Book>, HasNameResolvers<Book> {
   reqUnionProp: Resolver<Book, {}, UnionProp>;
   unionProp: Resolver<Book, {}, UnionProp | null | undefined>;
 }
@@ -74,22 +70,10 @@ export interface AuthorSummaryResolvers {
 }
 
 export interface ContainerResolvers {
-  thingOptional: Resolver<
-    Container,
-    {},
-    AuthorId | Book | HasName | null | undefined
-  >;
+  thingOptional: Resolver<Container, {}, AuthorId | Book | HasName | null | undefined>;
   thingRequired: Resolver<Container, {}, AuthorId | Book | HasName>;
-  thingsOptional: Resolver<
-    Container,
-    {},
-    ReadonlyArray<AuthorId | Book | HasName> | null | undefined
-  >;
-  thingsRequired: Resolver<
-    Container,
-    {},
-    ReadonlyArray<AuthorId | Book | HasName>
-  >;
+  thingsOptional: Resolver<Container, {}, ReadonlyArray<AuthorId | Book | HasName> | null | undefined>;
+  thingsRequired: Resolver<Container, {}, ReadonlyArray<AuthorId | Book | HasName>>;
 }
 
 export interface SaveAuthorResultResolvers {
@@ -98,20 +82,11 @@ export interface SaveAuthorResultResolvers {
 
 export interface SubscriptionResolvers {
   authorSaved: SubscriptionResolver<Subscription, {}, AuthorId>;
-  searchSub: SubscriptionResolver<
-    Subscription,
-    SubscriptionSearchSubArgs,
-    readonly SearchResult[]
-  >;
+  searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, readonly SearchResult[]>;
 }
 
 type MaybePromise<T> = T | Promise<T>;
-export type Resolver<R, A, T> = (
-  root: R,
-  args: A,
-  ctx: Context,
-  info: GraphQLResolveInfo,
-) => MaybePromise<T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
 
 export type SubscriptionResolverFilter<R, A, T> = (
   root: R | undefined,
@@ -120,12 +95,7 @@ export type SubscriptionResolverFilter<R, A, T> = (
   info: GraphQLResolveInfo,
 ) => boolean | Promise<boolean>;
 export type SubscriptionResolver<R, A, T> = {
-  subscribe: (
-    root: R | undefined,
-    args: A,
-    ctx: Context,
-    info: GraphQLResolveInfo,
-  ) => AsyncIterator<T>;
+  subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
 };
 
 export interface MutationSaveAuthorArgs {

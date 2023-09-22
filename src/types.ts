@@ -1,6 +1,7 @@
 import {
   GraphQLEnumType,
   GraphQLInputObjectType,
+  GraphQLInputType,
   GraphQLInterfaceType,
   GraphQLList,
   GraphQLNamedType,
@@ -17,7 +18,7 @@ import { Config } from "./index";
 export function mapType(
   config: Config,
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
-  type: GraphQLOutputType | GraphQLInputObjectType,
+  type: GraphQLOutputType | GraphQLInputType,
   isInputOrDto = false,
   isNullable = true,
 ): Code {
@@ -74,7 +75,7 @@ export function mapInterfaceType(
     return type.name;
   }
   return joinCodes(
-    [...impls.filter(i => isMappedType(i, config)).map(i => mapObjectType(config, i)), type.name],
+    [...impls.filter((i) => isMappedType(i, config)).map((i) => mapObjectType(config, i)), type.name],
     " | ",
   );
 }
@@ -108,7 +109,7 @@ export function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {
   return t instanceof GraphQLObjectType;
 }
 
-export function isNonNullType(t: GraphQLOutputType | GraphQLInputObjectType): t is GraphQLNonNull<any> {
+export function isNonNullType(t: GraphQLOutputType | GraphQLInputType): t is GraphQLNonNull<any> {
   return t instanceof GraphQLNonNull;
 }
 
