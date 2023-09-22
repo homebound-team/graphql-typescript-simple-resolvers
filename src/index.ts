@@ -29,11 +29,12 @@ import {
   toImp,
 } from "./types";
 import PluginOutput = Types.PluginOutput;
-import { TypeMap } from "graphql/type/schema";
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
 const GraphQLResolveInfoImp = imp("GraphQLResolveInfo@graphql");
+
+type TypeMap = ReturnType<GraphQLSchema["getTypeMap"]>;
 
 /**
  * Generates Resolver/server-side type definitions for an Apollo-based GraphQL implementation.
@@ -47,17 +48,17 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
 
   const typesThatNeedResolvers = Object.values(schema.getTypeMap())
     .filter(isObjectType)
-    .filter(t => needsResolver(config, t));
+    .filter((t) => needsResolver(config, t));
 
   const typesThatMayHaveResolvers = Object.values(schema.getTypeMap())
     .filter(isObjectType)
-    .filter(t => optionalResolver(config, t));
+    .filter((t) => optionalResolver(config, t));
 
   const interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]> = new Map();
   Object.values(schema.getTypeMap())
     .filter(isObjectType)
-    .forEach(t => {
-      t.getInterfaces().forEach(it => {
+    .forEach((t) => {
+      t.getInterfaces().forEach((it) => {
         if (!interfaceToImpls.has(it)) {
           interfaceToImpls.set(it, []);
         }
@@ -96,7 +97,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   // Union Types
   generateUnionTypes(chunks, config, interfaceToImpls, schema);
 
-  const content = await code`${chunks}`.toStringWithImports();
+  const content = await code`${chunks}`.toString();
   return { content } as PluginOutput;
 };
 
@@ -108,15 +109,15 @@ function generateTopLevelResolversType(
 ): void {
   const resolvers = code`
     export interface Resolvers {
-      ${typesThatNeedResolvers.map(o => {
+      ${typesThatNeedResolvers.map((o) => {
         return `${o.name}: ${o.name}Resolvers;`;
       })} 
-      ${typesThatMayHaveResolvers.map(o => {
+      ${typesThatMayHaveResolvers.map((o) => {
         return `${o.name}?: ${o.name}Resolvers;`;
       })} 
       ${scalars
-        .filter(s => !builtInScalarsImps.includes(s.name))
-        .map(s => {
+        .filter((s) => !builtInScalarsImps.includes(s.name))
+        .map((s) => {
           return code`${s.name}: ${GraphQLScalarTypeSymbolImp};`;
         })}
     }
@@ -131,14 +132,14 @@ function generateEachInterfaceResolverType(
   allTypesWithResolvers: GraphQLInterfaceType[],
 ): void {
   const argDefs: Code[] = [];
-  allTypesWithResolvers.forEach(type => {
+  allTypesWithResolvers.forEach((type) => {
     chunks.push(code`
       export interface ${type.name}Resolvers<T> {
         ${generateFieldSignature(type, config, interfaceToImpls, argDefs)}
       }
     `);
   });
-  argDefs.forEach(a => chunks.push(a));
+  argDefs.forEach((a) => chunks.push(a));
 }
 
 // Also add type unions of the possible types for use in code if desired
@@ -150,9 +151,9 @@ function generateInterfaceUnionTypes(
   interfaceToImpls.forEach((impls, inter) =>
     chunks.push(code`
   export type ${inter.name}Types = ${joinCodes(
-      impls.map(imp => code`${mapObjectType(config, imp)}`),
-      " | ",
-    )};
+    impls.map((imp) => code`${mapObjectType(config, imp)}`),
+    " | ",
+  )};
   `),
   );
 }
@@ -165,13 +166,13 @@ function generateUnionResolvers(
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
 ): void {
   const unions = Object.values(typeMap)
-    .filter(t => isUnionType(t))
-    .map(ut => {
-      const types = (ut as GraphQLUnionType).getTypes().map(t => code`${mapObjectType(config, t)}`);
+    .filter((t) => isUnionType(t))
+    .map((ut) => {
+      const types = (ut as GraphQLUnionType).getTypes().map((t) => code`${mapObjectType(config, t)}`);
       return code`${ut.name}: { __resolveType(o: ${joinCodes(types, "|")}): string; };`;
     });
   interfaceToImpls.forEach((objects, inter) => {
-    const types = objects.map(t => code`${mapObjectType(config, t)}`);
+    const types = objects.map((t) => code`${mapObjectType(config, t)}`);
     unions.push(code`${inter.name}: { __resolveType(o: ${joinCodes(types, "|")}): string; };`);
   });
   chunks.push(code`
@@ -189,7 +190,7 @@ function generateEachResolverType(
 ): void {
   const ctx = toImp(config.contextType);
   const argDefs: Code[] = [];
-  allTypesWithResolvers.forEach(type => {
+  allTypesWithResolvers.forEach((type) => {
     const root = mapObjectType(config, type);
     chunks.push(code`
       export interface ${type.name}Resolvers ${extendInterfaces(type, root)} {
@@ -211,9 +212,10 @@ function generateEachResolverType(
       subscribe: (root: R | undefined, args: A, ctx: ${ctx}, info: ${GraphQLResolveInfoImp}) => AsyncIterator<T>;
     }
   `);
-  argDefs.forEach(a => chunks.push(a));
+  argDefs.forEach((a) => chunks.push(a));
 }
 
+/** Generates the `firstName: Resolver<Root, Arg, Ctx>` field. */
 function generateFieldSignature(
   type: GraphQLObjectType | GraphQLInterfaceType,
   config: Config,
@@ -222,17 +224,17 @@ function generateFieldSignature(
 ) {
   // For GraphQLObjectType, don't include fields which are coming from an implemented interface
   const excludeFields =
-    type instanceof GraphQLObjectType ? type.getInterfaces().flatMap(i => Object.keys(i.getFields())) : [];
+    type instanceof GraphQLObjectType ? type.getInterfaces().flatMap((i) => Object.keys(i.getFields())) : [];
 
   return Object.values(type.getFields())
-    .filter(f => !excludeFields.includes(f.name))
-    .map(f => {
+    .filter((f) => !excludeFields.includes(f.name))
+    .map((f) => {
       const argsName = `${type.name}${upperCaseFirst(f.name)}Args`;
       const args = f.args.length > 0 ? argsName : "{}";
       if (f.args.length > 0) {
         argDefs.push(code`
           export interface ${argsName} {
-            ${f.args.map(a => {
+            ${f.args.map((a) => {
               const maybeOptional = isNullableType(a.type) ? "?" : "";
               return code`${a.name}${maybeOptional}: ${mapType(config, interfaceToImpls, a.type)}; `;
             })}
@@ -251,7 +253,7 @@ function generateFieldSignature(
 
 function extendInterfaces(type: GraphQLObjectType, root: string): Code {
   const interfaces = joinCode(
-    type.getInterfaces().map(i => code`${i.name}Resolvers<${root}>`),
+    type.getInterfaces().map((i) => code`${i.name}Resolvers<${root}>`),
     { on: ", " },
   );
   return interfaces ? code`extends ${interfaces}` : code``;
@@ -263,10 +265,10 @@ function generateDtosForNonMappedTypes(
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   types: (GraphQLObjectType | GraphQLInterfaceType)[],
 ) {
-  types.forEach(type => {
+  types.forEach((type) => {
     chunks.push(code`
       export interface ${type.name} {
-        ${Object.values(type.getFields()).map(f => {
+        ${Object.values(type.getFields()).map((f) => {
           return code`${f.name}: ${mapType(config, interfaceToImpls, f.type, true)};`;
         })}
       }
@@ -282,10 +284,10 @@ function generateInputTypes(
 ): void {
   Object.values(schema.getTypeMap())
     .filter(isInputObjectType)
-    .forEach(type => {
+    .forEach((type) => {
       chunks.push(code`
         export interface ${type.name} {
-          ${Object.values(type.getFields()).map(f => {
+          ${Object.values(type.getFields()).map((f) => {
             const isNonNull = isNonNullType(f.type);
             const maybeOptional = !isNonNull ? "?" : "";
             return code`${f.name}${maybeOptional}: ${mapType(config, interfaceToImpls, f.type, true)};`;
@@ -299,12 +301,12 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
   Object.values(schema.getTypeMap())
     .filter(isEnumType)
     .filter(isNotMetadataType)
-    .forEach(type => {
+    .forEach((type) => {
       const mappedEnum = config.enumValues[type.name];
       if (!mappedEnum) {
         chunks.push(code`
           export enum ${type.name} {
-            ${type.getValues().map(v => `${pascalCase(v.value)} = "${v.value}",`)}
+            ${type.getValues().map((v) => `${pascalCase(v.value)} = "${v.value}",`)}
           }
        `);
       } else {
@@ -325,12 +327,12 @@ function generateUnionTypes(
   Object.values(schema.getTypeMap())
     .filter(isUnionType)
     .filter(isNotMetadataType)
-    .forEach(type => {
+    .forEach((type) => {
       chunks.push(code`
         export type ${type.name} = ${joinCodes(
-        type.getTypes().map(t => mapType(config, interfaceToImpls, t, false, false)),
-        " | ",
-      )}
+          type.getTypes().map((t) => mapType(config, interfaceToImpls, t, false, false)),
+          " | ",
+        )}
       `);
     });
 }
