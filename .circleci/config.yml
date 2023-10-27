@@ -35,7 +35,7 @@ commands:
 jobs:
   build:
     docker:
-      - image: cimg/node:18.18.0
+      - image: cimg/node:20.9.0
     working_directory: ~/project
     steps:
       - bootstrap
@@ -43,7 +43,7 @@ jobs:
 
   publish:
     docker:
-      - image: cimg/node:18.18.0
+      - image: cimg/node:20.9.0
     working_directory: ~/project
     steps:
       - bootstrap
