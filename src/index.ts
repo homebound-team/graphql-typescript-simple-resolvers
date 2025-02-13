@@ -28,6 +28,7 @@ import {
   mapType,
   toImp,
 } from "./types";
+import "@homebound/activesupport";
 import PluginOutput = Types.PluginOutput;
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
@@ -45,6 +46,8 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   const chunks: Code[] = [];
 
   const interfaceTypes = Object.values(schema.getTypeMap()).filter(isInterfaceType);
+
+  const [mappedInterfaceTypes, unmappedInterfaceTypes] = interfaceTypes.partition((t) => isMappedType(t, config));
 
   const typesThatNeedResolvers = Object.values(schema.getTypeMap())
     .filter(isObjectType)
@@ -86,7 +89,10 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   generateEachResolverType(chunks, config, interfaceToImpls, allTypesWithResolvers);
 
   // For the output types with optional resolvers, make DTOs for them. Mapped types don't need DTOs.
-  generateDtosForNonMappedTypes(chunks, config, interfaceToImpls, [...typesThatMayHaveResolvers, ...interfaceTypes]);
+  generateDtosForNonMappedTypes(chunks, config, interfaceToImpls, [
+    ...typesThatMayHaveResolvers,
+    ...unmappedInterfaceTypes,
+  ]);
 
   // Input types
   generateInputTypes(chunks, config, interfaceToImpls, schema);

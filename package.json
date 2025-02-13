@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^5.0.1",
+    "@homebound/activesupport": "^1.9.0",
     "change-case": "^4.1.2",
     "ts-poet": "^6.6.0"
   },

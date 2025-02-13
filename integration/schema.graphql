@@ -22,6 +22,7 @@ type Book implements HasName & FieldWithArgs {
   unionProp: UnionProp
   reqUnionProp: UnionProp!
   field1(input: Boolean): Boolean
+  publisher: Publisher
 }
 
 interface HasName {
@@ -93,3 +94,11 @@ enum Working {
 
 scalar Date
 scalar DateTime
+
+interface Publisher {
+  name: String
+}
+
+type LargePublisher implements Publisher {
+  name: String
+}

@@ -70,6 +70,9 @@ export function mapInterfaceType(
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   type: GraphQLInterfaceType,
 ): any {
+  if (isMappedType(type, config)) {
+    return mapObjectType(config, type);
+  }
   const impls = interfaceToImpls.get(type);
   if (!impls) {
     return type.name;

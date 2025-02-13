@@ -989,12 +989,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@homebound/activesupport@npm:^1.9.0":
+  version: 1.9.0
+  resolution: "@homebound/activesupport@npm:1.9.0"
+  dependencies:
+    temporal-polyfill: ^0.2.4
+  checksum: 45e58ad09dcb7905042b7cd5b398d2de7046f6ccb88c2fcd74ff167213c9809f932df7b7138110d4ee46e0c93382ec6638d4064cb09ad9c087d1c14d3168eb59
+  languageName: node
+  linkType: hard
+
 "@homebound/graphql-typescript-simple-resolvers@workspace:.":
   version: 0.0.0-use.local
   resolution: "@homebound/graphql-typescript-simple-resolvers@workspace:."
   dependencies:
     "@graphql-codegen/cli": ^5.0.0
     "@graphql-codegen/plugin-helpers": ^5.0.1
+    "@homebound/activesupport": ^1.9.0
     change-case: ^4.1.2
     graphql: ^16.8.1
     graphql-subscriptions: ^2.0.0
@@ -5674,6 +5684,22 @@ __metadata:
     mkdirp: ^1.0.3
     yallist: ^4.0.0
   checksum: db4d9fe74a2082c3a5016630092c54c8375ff3b280186938cfd104f2e089c4fd9bad58688ef6be9cf186a889671bf355c7cda38f09bbf60604b281715ca57f5c
+  languageName: node
+  linkType: hard
+
+"temporal-polyfill@npm:^0.2.4":
+  version: 0.2.5
+  resolution: "temporal-polyfill@npm:0.2.5"
+  dependencies:
+    temporal-spec: ^0.2.4
+  checksum: 12be92c0a1d1268d5986716cf291e4cad8f941c6bd75ddf70bc5f6932cf6244d32c9ef8a0a9fc1311bf7fde4e37b9ff6ab82d9d27202604340571e4bbb5b8585
+  languageName: node
+  linkType: hard
+
+"temporal-spec@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "temporal-spec@npm:0.2.4"
+  checksum: a458f44ac3c81b9a7225d72616b4f14419e5a7c4a2bce4a8fda0ff1d93a32dfba5bd74f51a756fba7ddd5d9cc7acecf5b62af72f218dcf115c31ceda93d30dd9
   languageName: node
   linkType: hard
 
