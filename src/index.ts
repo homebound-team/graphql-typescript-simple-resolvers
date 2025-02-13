@@ -47,7 +47,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
 
   const interfaceTypes = Object.values(schema.getTypeMap()).filter(isInterfaceType);
 
-  const [mappedInterfaceTypes, unmappedInterfaceTypes] = interfaceTypes.partition((t) => isMappedType(t, config));
+  const unmappedInterfaceTypes = interfaceTypes.filter((t) => !isMappedType(t, config));
 
   const typesThatNeedResolvers = Object.values(schema.getTypeMap())
     .filter(isObjectType)
