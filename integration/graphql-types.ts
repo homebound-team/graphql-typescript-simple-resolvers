@@ -1,9 +1,10 @@
 import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
-import { AuthorId, Book, Context, Popularity } from "./entities";
+import { AuthorId, Book, Context, LargePublisher, Popularity, Publisher } from "./entities";
 
 export interface Resolvers {
   Author: AuthorResolvers;
   Book: BookResolvers;
+  LargePublisher: LargePublisherResolvers;
   Mutation: MutationResolvers;
   Query: QueryResolvers;
   AuthorSummary?: AuthorSummaryResolvers;
@@ -22,12 +23,18 @@ export interface HasNameResolvers<T> {
   name: Resolver<T, {}, string>;
 }
 
+export interface PublisherResolvers<T> {
+  name: Resolver<T, {}, string | null | undefined>;
+}
+
 export interface FieldWithArgsField1Args {
   input?: boolean | null | undefined;
 }
 export type FieldWithArgsTypes = AuthorId | Book;
 
 export type HasNameTypes = AuthorId | Book;
+
+export type PublisherTypes = LargePublisher;
 
 export type UnionResolvers = {
   SearchResult: { __resolveType(o: AuthorId | Book): string };
@@ -36,6 +43,7 @@ export type UnionResolvers = {
   UnionWithPrimitives: { __resolveType(o: AuthorId | Boolean | String): string };
   FieldWithArgs: { __resolveType(o: AuthorId | Book): string };
   HasName: { __resolveType(o: AuthorId | Book): string };
+  Publisher: { __resolveType(o: LargePublisher): string };
 };
 
 export interface AuthorResolvers extends FieldWithArgsResolvers<AuthorId>, HasNameResolvers<AuthorId> {
@@ -49,8 +57,12 @@ export interface AuthorResolvers extends FieldWithArgsResolvers<AuthorId>, HasNa
 }
 
 export interface BookResolvers extends FieldWithArgsResolvers<Book>, HasNameResolvers<Book> {
+  publisher: Resolver<Book, {}, Publisher | null | undefined>;
   reqUnionProp: Resolver<Book, {}, UnionProp>;
   unionProp: Resolver<Book, {}, UnionProp | null | undefined>;
+}
+
+export interface LargePublisherResolvers extends PublisherResolvers<LargePublisher> {
 }
 
 export interface MutationResolvers {

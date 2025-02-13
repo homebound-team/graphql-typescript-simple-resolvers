@@ -10,3 +10,6 @@ export enum Popularity {
   Low = "LOW",
   High = "HIGH",
 }
+
+export abstract class Publisher {};
+export class LargePublisher extends Publisher {};

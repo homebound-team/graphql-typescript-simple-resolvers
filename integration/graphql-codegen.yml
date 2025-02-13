@@ -10,6 +10,8 @@ generates:
       mappers:
         Author: "./entities#AuthorId"
         Book: "./entities#Book"
+        Publisher: "./entities#Publisher"
+        LargePublisher: "./entities#LargePublisher"
       enumValues:
         Popularity: "./entities#Popularity"
     plugins:
