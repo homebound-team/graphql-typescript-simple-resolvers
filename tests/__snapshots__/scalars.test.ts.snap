@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Scalar Types snapshots scalar type generation 1`] = `
+"import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+import { Context } from "./context";
+
+export interface Resolvers {
+  Query: QueryResolvers;
+  Mutation: MutationResolvers;
+  User?: UserResolvers;
+  Date: GraphQLScalarType;
+  DateTime: GraphQLScalarType;
+  CustomId: GraphQLScalarType;
+}
+
+export type UnionResolvers = {};
+
+export interface QueryResolvers {
+  user: Resolver<{}, QueryUserArgs, User | null | undefined>;
+  usersBornAfter: Resolver<{}, QueryUsersBornAfterArgs, readonly User[]>;
+  usersLoggedInAfter: Resolver<{}, QueryUsersLoggedInAfterArgs, readonly User[]>;
+}
+
+export interface MutationResolvers {
+  createUser: Resolver<{}, MutationCreateUserArgs, User>;
+}
+
+export interface UserResolvers {
+  id: Resolver<User, {}, string>;
+  name: Resolver<User, {}, string>;
+  birthday: Resolver<User, {}, Date | null | undefined>;
+  lastLogin: Resolver<User, {}, Date | null | undefined>;
+}
+
+type MaybePromise<T> = T | Promise<T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+export type SubscriptionResolverFilter<R, A, T> = (
+  root: R | undefined,
+  args: A,
+  ctx: Context,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>;
+export type SubscriptionResolver<R, A, T> = {
+  subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+};
+
+export interface QueryUserArgs {
+  id: string;
+}
+export interface QueryUsersBornAfterArgs {
+  date: Date;
+}
+export interface QueryUsersLoggedInAfterArgs {
+  datetime: Date;
+}
+export interface MutationCreateUserArgs {
+  input: UserInput;
+}
+export interface User {
+  id: string;
+  name: string;
+  birthday: Date | null | undefined;
+  lastLogin: Date | null | undefined;
+}
+
+export interface UserInput {
+  name: string;
+  birthday?: Date | null | undefined;
+  customId?: string | null | undefined;
+}
+"
+`;

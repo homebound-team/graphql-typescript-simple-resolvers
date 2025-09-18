@@ -1,0 +1,129 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Interface Support snapshots interface type generation 1`] = `
+"import { GraphQLResolveInfo } from "graphql";
+import { Context } from "./context";
+
+export interface Resolvers {
+  Query: QueryResolvers;
+  Author?: AuthorResolvers;
+  Book?: BookResolvers;
+  Article?: ArticleResolvers;
+  Container?: ContainerResolvers;
+}
+
+export interface HasNameResolvers<T> {
+  name: Resolver<T, {}, string>;
+}
+
+export interface FieldWithArgsResolvers<T> {
+  field1: Resolver<T, FieldWithArgsField1Args, boolean | null | undefined>;
+}
+
+export interface NodeResolvers<T> {
+  id: Resolver<T, {}, string>;
+}
+
+export interface FieldWithArgsField1Args {
+  input?: boolean | null | undefined;
+}
+export type HasNameTypes = Author | Book | Article;
+
+export type FieldWithArgsTypes = Author;
+
+export type NodeTypes = Author | Book;
+
+export type UnionResolvers = {
+  HasName: { __resolveType(o: Author | Book | Article): string };
+  FieldWithArgs: { __resolveType(o: Author): string };
+  Node: { __resolveType(o: Author | Book): string };
+};
+
+export interface QueryResolvers {
+  getByName: Resolver<{}, QueryGetByNameArgs, HasName | null | undefined>;
+  getAllNamed: Resolver<{}, {}, ReadonlyArray<HasName>>;
+  getNode: Resolver<{}, QueryGetNodeArgs, Node | null | undefined>;
+  container: Resolver<{}, {}, Container>;
+}
+
+export interface AuthorResolvers
+  extends HasNameResolvers<Author>, FieldWithArgsResolvers<Author>, NodeResolvers<Author> {
+  bio: Resolver<Author, {}, string | null | undefined>;
+}
+
+export interface BookResolvers extends HasNameResolvers<Book>, NodeResolvers<Book> {
+  isbn: Resolver<Book, {}, string | null | undefined>;
+}
+
+export interface ArticleResolvers extends HasNameResolvers<Article> {
+  content: Resolver<Article, {}, string>;
+}
+
+export interface ContainerResolvers {
+  item: Resolver<Container, {}, HasName | null | undefined>;
+  requiredItem: Resolver<Container, {}, HasName>;
+  items: Resolver<Container, {}, ReadonlyArray<HasName> | null | undefined>;
+  requiredItems: Resolver<Container, {}, ReadonlyArray<HasName>>;
+  nodeItem: Resolver<Container, {}, Node | null | undefined>;
+  nodeItems: Resolver<Container, {}, ReadonlyArray<Node>>;
+}
+
+type MaybePromise<T> = T | Promise<T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+export type SubscriptionResolverFilter<R, A, T> = (
+  root: R | undefined,
+  args: A,
+  ctx: Context,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>;
+export type SubscriptionResolver<R, A, T> = {
+  subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+};
+
+export interface QueryGetByNameArgs {
+  name: string;
+}
+export interface QueryGetNodeArgs {
+  id: string;
+}
+export interface Author {
+  id: string;
+  name: string;
+  bio: string | null | undefined;
+  field1: boolean | null | undefined;
+}
+
+export interface Book {
+  id: string;
+  name: string;
+  isbn: string | null | undefined;
+}
+
+export interface Article {
+  name: string;
+  content: string;
+}
+
+export interface Container {
+  item: HasName | null | undefined;
+  requiredItem: HasName;
+  items: Array<HasName> | null | undefined;
+  requiredItems: Array<HasName>;
+  nodeItem: Node | null | undefined;
+  nodeItems: Array<Node>;
+}
+
+export interface HasName {
+  name: string;
+}
+
+export interface FieldWithArgs {
+  field1: boolean | null | undefined;
+}
+
+export interface Node {
+  id: string;
+}
+"
+`;

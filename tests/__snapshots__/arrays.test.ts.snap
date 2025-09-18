@@ -1,0 +1,91 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Array Handling snapshots array handling generation 1`] = `
+"import { GraphQLResolveInfo } from "graphql";
+import { Context } from "./context";
+import { AuthorEntity, BookEntity } from "./entities";
+
+export interface Resolvers {
+  Author: AuthorResolvers;
+  Book: BookResolvers;
+  Query: QueryResolvers;
+  Mutation: MutationResolvers;
+  BookSummary?: BookSummaryResolvers;
+}
+
+export type UnionResolvers = {};
+
+export interface AuthorResolvers {
+  id: Resolver<AuthorEntity, {}, string>;
+  name: Resolver<AuthorEntity, {}, string>;
+}
+
+export interface BookResolvers {
+  id: Resolver<BookEntity, {}, string>;
+  title: Resolver<BookEntity, {}, string>;
+  authors: Resolver<BookEntity, {}, readonly AuthorEntity[]>;
+  coAuthors: Resolver<BookEntity, {}, readonly AuthorEntity[] | null | undefined>;
+  tags: Resolver<BookEntity, {}, readonly string[]>;
+  optionalTags: Resolver<BookEntity, {}, readonly string[] | null | undefined>;
+  categories: Resolver<BookEntity, {}, ReadonlyArray<string | null | undefined>>;
+  optionalCategories: Resolver<BookEntity, {}, ReadonlyArray<string | null | undefined> | null | undefined>;
+}
+
+export interface QueryResolvers {
+  books: Resolver<{}, {}, readonly BookEntity[]>;
+  optionalBooks: Resolver<{}, {}, readonly BookEntity[] | null | undefined>;
+  booksOrNull: Resolver<{}, {}, ReadonlyArray<BookEntity | null | undefined>>;
+  optionalBooksOrNull: Resolver<{}, {}, ReadonlyArray<BookEntity | null | undefined> | null | undefined>;
+  bookSummaries: Resolver<{}, {}, readonly BookSummary[]>;
+}
+
+export interface MutationResolvers {
+  createBook: Resolver<{}, MutationCreateBookArgs, BookEntity>;
+  updateBookTags: Resolver<{}, MutationUpdateBookTagsArgs, BookEntity>;
+}
+
+export interface BookSummaryResolvers {
+  title: Resolver<BookSummary, {}, string>;
+  authorNames: Resolver<BookSummary, {}, readonly string[]>;
+  optionalAuthorNames: Resolver<BookSummary, {}, readonly string[] | null | undefined>;
+  tagList: Resolver<BookSummary, {}, ReadonlyArray<string | null | undefined>>;
+  optionalTagList: Resolver<BookSummary, {}, ReadonlyArray<string | null | undefined> | null | undefined>;
+}
+
+type MaybePromise<T> = T | Promise<T>;
+export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+export type SubscriptionResolverFilter<R, A, T> = (
+  root: R | undefined,
+  args: A,
+  ctx: Context,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>;
+export type SubscriptionResolver<R, A, T> = {
+  subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+};
+
+export interface MutationCreateBookArgs {
+  input: BookInput;
+}
+export interface MutationUpdateBookTagsArgs {
+  id: string;
+  tags: readonly string[];
+}
+export interface BookSummary {
+  title: string;
+  authorNames: string[];
+  optionalAuthorNames: string[] | null | undefined;
+  tagList: Array<string | null | undefined>;
+  optionalTagList: Array<string | null | undefined> | null | undefined;
+}
+
+export interface BookInput {
+  title: string;
+  authorIds: string[];
+  optionalAuthorIds?: string[] | null | undefined;
+  tags: Array<string | null | undefined>;
+  optionalTags?: Array<string | null | undefined> | null | undefined;
+}
+"
+`;
