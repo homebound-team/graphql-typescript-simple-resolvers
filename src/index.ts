@@ -1,4 +1,5 @@
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
+import { parseMapper, isExternalMapperType } from "@graphql-codegen/visitor-plugin-common";
 import { pascalCase } from "change-case";
 import {
   GraphQLInterfaceType,
@@ -316,10 +317,18 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
           }
        `);
       } else {
-        const [path, symbol] = mappedEnum.split("#");
-        chunks.push(code`
-          export { ${symbol} } from "${path}";
-        `);
+        const parsed = parseMapper(mappedEnum);
+        if (isExternalMapperType(parsed)) {
+          if (parsed.default) {
+            chunks.push(code`
+              export { default as ${type.name} } from "${parsed.source}";
+            `);
+          } else {
+            chunks.push(code`
+              export { ${parsed.import} } from "${parsed.source}";
+            `);
+          }
+        }
       }
     });
 }

@@ -11,6 +11,7 @@ import {
   GraphQLScalarType,
   GraphQLUnionType,
 } from "graphql";
+import { parseMapper, isExternalMapperType } from "@graphql-codegen/visitor-plugin-common";
 import { Code, code, imp } from "ts-poet";
 import { Config } from "./index";
 
@@ -87,7 +88,7 @@ function mapEnumType(config: Config, type: GraphQLEnumType): any {
   return toImp(config.enumValues[type.name]) || type.name;
 }
 
-function mapScalarType(config: Config, type: GraphQLScalarType): string {
+function mapScalarType(config: Config, type: GraphQLScalarType): any {
   if (type.name === "String" || type.name === "ID") {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
@@ -95,7 +96,7 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string {
   } else if (type.name === "Boolean") {
     return "boolean";
   } else {
-    return config.scalars[type.name] || type.name.toString();
+    return toImp(config.scalars[type.name]) || type.name.toString();
   }
 }
 
@@ -104,8 +105,18 @@ export function toImp(spec: string | undefined): unknown {
   if (!spec) {
     return undefined;
   }
-  const [path, symbol] = spec.split("#");
-  return imp(`${symbol}@${path}`);
+  const parsed = parseMapper(spec);
+  if (isExternalMapperType(parsed)) {
+    // For default imports, use just the type name
+    if (parsed.default) {
+      return imp(`${parsed.type}@${parsed.source}`);
+    }
+    // For named imports, use the import element (which may include 'as' aliasing)
+    return imp(`${parsed.import}@${parsed.source}`);
+  } else {
+    // Internal mapper, just return the type as-is
+    return parsed.type;
+  }
 }
 
 export function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {
