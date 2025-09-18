@@ -88,7 +88,7 @@ function mapEnumType(config: Config, type: GraphQLEnumType): any {
   return toImp(config.enumValues[type.name]) || type.name;
 }
 
-function mapScalarType(config: Config, type: GraphQLScalarType): any {
+function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
   if (type.name === "String" || type.name === "ID") {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
