@@ -1,24 +1,18 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Interface support", () => {
-  it("generates interfaces and implementing types", async () => {
+describe("Nullable field handling", () => {
+  it("generates nullable vs required field types", async () => {
     const schema = createTestSchema(`
-      interface HasName {
-        name: String!
-      }
-
-      type Author implements HasName {
+      type Author {
         name: String!
         bio: String
-      }
-
-      type Book implements HasName {
-        name: String!
-        isbn: String
+        age: Int
+        active: Boolean!
       }
 
       type Query {
-        getByName(name: String!): HasName
+        author: Author
+        requiredAuthor: Author!
       }
     `);
 
@@ -35,27 +29,20 @@ describe("Interface support", () => {
      export interface Resolvers {
        Query: QueryResolvers;
        Author?: AuthorResolvers;
-       Book?: BookResolvers;
      }
 
-     export interface HasNameResolvers<T> {
-       name: Resolver<T, {}, string>;
-     }
-
-     export type HasNameTypes = Author | Book;
-
-     export type UnionResolvers = { HasName: { __resolveType(o: Author | Book): string } };
+     export type UnionResolvers = {};
 
      export interface QueryResolvers {
-       getByName: Resolver<{}, QueryGetByNameArgs, HasName | null | undefined>;
+       author: Resolver<{}, {}, Author | null | undefined>;
+       requiredAuthor: Resolver<{}, {}, Author>;
      }
 
-     export interface AuthorResolvers extends HasNameResolvers<Author> {
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
        bio: Resolver<Author, {}, string | null | undefined>;
-     }
-
-     export interface BookResolvers extends HasNameResolvers<Book> {
-       isbn: Resolver<Book, {}, string | null | undefined>;
+       age: Resolver<Author, {}, number | null | undefined>;
+       active: Resolver<Author, {}, boolean>;
      }
 
      type MaybePromise<T> = T | Promise<T>;
@@ -71,39 +58,99 @@ describe("Interface support", () => {
        subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
      };
 
-     export interface QueryGetByNameArgs {
-       name: string;
-     }
      export interface Author {
        name: string;
        bio: string | null | undefined;
-     }
-
-     export interface Book {
-       name: string;
-       isbn: string | null | undefined;
-     }
-
-     export interface HasName {
-       name: string;
+       age: number | null | undefined;
+       active: boolean;
      }
      "
     `);
   });
 
-  it("generates interfaces with arguments", async () => {
+  it("generates nullable object references", async () => {
     const schema = createTestSchema(`
-      interface FieldWithArgs {
-        field1(input: Boolean): Boolean
+      interface Publisher {
+        name: String
       }
 
-      type Author implements FieldWithArgs {
-        name: String!
-        field1(input: Boolean): Boolean
+      type Book {
+        title: String!
+        publisher: Publisher
+        requiredPublisher: Publisher!
       }
 
       type Query {
-        author: Author
+        books: [Book!]!
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      scalars: {},
+      mappers: {},
+      enumValues: {},
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Book?: BookResolvers;
+     }
+
+     export interface PublisherResolvers<T> {
+       name: Resolver<T, {}, string | null | undefined>;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface QueryResolvers {
+       books: Resolver<{}, {}, readonly Book[]>;
+     }
+
+     export interface BookResolvers {
+       title: Resolver<Book, {}, string>;
+       publisher: Resolver<Book, {}, Publisher | null | undefined>;
+       requiredPublisher: Resolver<Book, {}, Publisher>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Book {
+       title: string;
+       publisher: Publisher | null | undefined;
+       requiredPublisher: Publisher;
+     }
+
+     export interface Publisher {
+       name: string | null | undefined;
+     }
+     "
+    `);
+  });
+
+  it("generates optional keys for nullable arguments", async () => {
+    const schema = createTestSchema(`
+      type Author {
+        name: String!
+      }
+
+      type Query {
+        authors(name: String, limit: Int!, active: Boolean): [Author!]!
+        search(query: String!, category: String): [Author!]!
       }
     `);
 
@@ -122,22 +169,14 @@ describe("Interface support", () => {
        Author?: AuthorResolvers;
      }
 
-     export interface FieldWithArgsResolvers<T> {
-       field1: Resolver<T, FieldWithArgsField1Args, boolean | null | undefined>;
-     }
-
-     export interface FieldWithArgsField1Args {
-       input?: boolean | null | undefined;
-     }
-     export type FieldWithArgsTypes = Author;
-
-     export type UnionResolvers = { FieldWithArgs: { __resolveType(o: Author): string } };
+     export type UnionResolvers = {};
 
      export interface QueryResolvers {
-       author: Resolver<{}, {}, Author | null | undefined>;
+       authors: Resolver<{}, QueryAuthorsArgs, readonly Author[]>;
+       search: Resolver<{}, QuerySearchArgs, readonly Author[]>;
      }
 
-     export interface AuthorResolvers extends FieldWithArgsResolvers<Author> {
+     export interface AuthorResolvers {
        name: Resolver<Author, {}, string>;
      }
 
@@ -154,100 +193,16 @@ describe("Interface support", () => {
        subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
      };
 
+     export interface QueryAuthorsArgs {
+       name?: string | null | undefined;
+       limit: number;
+       active?: boolean | null | undefined;
+     }
+     export interface QuerySearchArgs {
+       query: string;
+       category?: string | null | undefined;
+     }
      export interface Author {
-       name: string;
-       field1: boolean | null | undefined;
-     }
-
-     export interface FieldWithArgs {
-       field1: boolean | null | undefined;
-     }
-     "
-    `);
-  });
-
-  it("generates types using interfaces in fields", async () => {
-    const schema = createTestSchema(`
-      interface HasName {
-        name: String!
-      }
-
-      type Author implements HasName {
-        name: String!
-      }
-
-      type Container {
-        item: HasName
-        requiredItem: HasName!
-        items: [HasName!]!
-      }
-
-      type Query {
-        container: Container!
-      }
-    `);
-
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
-
-     export interface Resolvers {
-       Query: QueryResolvers;
-       Author?: AuthorResolvers;
-       Container?: ContainerResolvers;
-     }
-
-     export interface HasNameResolvers<T> {
-       name: Resolver<T, {}, string>;
-     }
-
-     export type HasNameTypes = Author;
-
-     export type UnionResolvers = { HasName: { __resolveType(o: Author): string } };
-
-     export interface QueryResolvers {
-       container: Resolver<{}, {}, Container>;
-     }
-
-     export interface AuthorResolvers extends HasNameResolvers<Author> {
-     }
-
-     export interface ContainerResolvers {
-       item: Resolver<Container, {}, HasName | null | undefined>;
-       requiredItem: Resolver<Container, {}, HasName>;
-       items: Resolver<Container, {}, ReadonlyArray<HasName>>;
-     }
-
-     type MaybePromise<T> = T | Promise<T>;
-     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
-
-     export type SubscriptionResolverFilter<R, A, T> = (
-       root: R | undefined,
-       args: A,
-       ctx: Context,
-       info: GraphQLResolveInfo,
-     ) => boolean | Promise<boolean>;
-     export type SubscriptionResolver<R, A, T> = {
-       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
-     };
-
-     export interface Author {
-       name: string;
-     }
-
-     export interface Container {
-       item: HasName | null | undefined;
-       requiredItem: HasName;
-       items: Array<HasName>;
-     }
-
-     export interface HasName {
        name: string;
      }
      "

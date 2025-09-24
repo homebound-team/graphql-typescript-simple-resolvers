@@ -1,176 +1,171 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Interface Mapped Types", () => {
-  const schemaWithMappedInterfaces = `
-    interface Publisher {
-      name: String
-      country: String
-    }
+describe("Interface as mapped type", () => {
+  it("generates interfaces configured as mapped types", async () => {
+    const schema = createTestSchema(`
+      interface Publisher {
+        name: String
+      }
 
-    interface Identifiable {
-      id: ID!
-    }
+      type LargePublisher implements Publisher {
+        name: String
+      }
 
-    type SmallPublisher implements Publisher {
-      name: String
-      country: String
-      employees: Int
-    }
+      type Book {
+        publisher: Publisher
+      }
 
-    type LargePublisher implements Publisher & Identifiable {
-      id: ID!
-      name: String
-      country: String
-      revenue: Float
-      subsidiaries: [String!]!
-    }
+      type Query {
+        books: [Book!]!
+      }
+    `);
 
-    type Book {
-      title: String!
-      publisher: Publisher
-      isbn: String!
-    }
-
-    type Magazine {
-      title: String!
-      publisher: Publisher!
-      issueNumber: Int!
-    }
-
-    type Query {
-      publishers: [Publisher!]!
-      identifiableItems: [Identifiable!]!
-      getPublisher(id: ID!): Publisher
-      books: [Book!]!
-    }
-  `;
-
-  it("allows interfaces to be mapped to custom types", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
     const code = await runPlugin(schema, {
+      scalars: {},
       mappers: {
         Publisher: "./entities#PublisherEntity",
-        Identifiable: "./entities#IdentifiableEntity",
       },
-      scalars: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`import { IdentifiableEntity, PublisherEntity } from "./entities";`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+     import { PublisherEntity } from "./entities";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       LargePublisher?: LargePublisherResolvers;
+       Book?: BookResolvers;
+     }
+
+     export interface PublisherResolvers<T> {
+       name: Resolver<T, {}, string | null | undefined>;
+     }
+
+     export type PublisherTypes = LargePublisher;
+
+     export type UnionResolvers = { Publisher: { __resolveType(o: LargePublisher): string } };
+
+     export interface QueryResolvers {
+       books: Resolver<{}, {}, readonly Book[]>;
+     }
+
+     export interface LargePublisherResolvers extends PublisherResolvers<LargePublisher> {
+     }
+
+     export interface BookResolvers {
+       publisher: Resolver<Book, {}, PublisherEntity | null | undefined>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface LargePublisher {
+       name: string | null | undefined;
+     }
+
+     export interface Book {
+       publisher: PublisherEntity | null | undefined;
+     }
+     "
+    `);
   });
 
-  it("generates mapped interface types", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
+  it("generates interface implementations with mapped interface", async () => {
+    const schema = createTestSchema(`
+      interface Node {
+        id: ID!
+      }
+
+      type User implements Node {
+        id: ID!
+        name: String!
+      }
+
+      type Post implements Node {
+        id: ID!
+        title: String!
+      }
+
+      type Query {
+        node(id: ID!): Node
+        users: [User!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
       scalars: {},
+      mappers: {
+        Node: "./entities#NodeEntity",
+        User: "./entities#UserEntity",
+      },
       enumValues: {},
     });
 
-    // When interfaces are mapped, the plugin doesn't generate type aliases
-    // but uses the mapped types directly in resolvers and references
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+     import { NodeEntity, UserEntity } from "./entities";
 
-  it("generates types implementing mapped interfaces", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
+     export interface Resolvers {
+       User: UserResolvers;
+       Query: QueryResolvers;
+       Post?: PostResolvers;
+     }
 
-    expect(code).toContain(`export interface SmallPublisher {
-  name: string | null | undefined;
-  country: string | null | undefined;
-  employees: number | null | undefined;
-}`);
+     export interface NodeResolvers<T> {
+       id: Resolver<T, {}, string>;
+     }
 
-    expect(code).toContain(`export interface LargePublisher {
-  id: string;
-  name: string | null | undefined;
-  country: string | null | undefined;
-  revenue: number | null | undefined;
-  subsidiaries: string[];
-}`);
-  });
+     export type NodeTypes = UserEntity | Post;
 
-  it("handles fields that reference mapped interfaces", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
+     export type UnionResolvers = { Node: { __resolveType(o: UserEntity | Post): string } };
 
-    expect(code).toContain(`export interface Book {
-  title: string;
-  publisher: PublisherEntity | null | undefined;
-  isbn: string;
-}`);
+     export interface UserResolvers extends NodeResolvers<UserEntity> {
+       name: Resolver<UserEntity, {}, string>;
+     }
 
-    expect(code).toContain(`export interface Magazine {
-  title: string;
-  publisher: PublisherEntity;
-  issueNumber: number;
-}`);
-  });
+     export interface QueryResolvers {
+       node: Resolver<{}, QueryNodeArgs, NodeEntity | null | undefined>;
+       users: Resolver<{}, {}, readonly UserEntity[]>;
+     }
 
-  it("generates resolvers for types with mapped interface fields", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
+     export interface PostResolvers extends NodeResolvers<Post> {
+       title: Resolver<Post, {}, string>;
+     }
 
-    expect(code).toContain(`publisher: Resolver<Book, {}, PublisherEntity | null | undefined>;`);
-  });
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
 
-  it("generates interface resolvers for mapped interfaces", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
 
-    expect(code).toContain(`Publisher: { __resolveType(o: SmallPublisher | LargePublisher): string };`);
-  });
-
-  it("generates query resolvers returning mapped interfaces", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`publishers: Resolver<{}, {}, ReadonlyArray<PublisherEntity>>;`);
-    expect(code).toContain(`getPublisher: Resolver<{}, QueryGetPublisherArgs, PublisherEntity | null | undefined>;`);
-  });
-
-  it("snapshots interface mapper generation", async () => {
-    const schema = createTestSchema(schemaWithMappedInterfaces);
-    const code = await runPlugin(schema, {
-      mappers: {
-        Publisher: "./entities#PublisherEntity",
-        Identifiable: "./entities#IdentifiableEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
-    expect(code).toMatchSnapshot();
+     export interface QueryNodeArgs {
+       id: string;
+     }
+     export interface Post {
+       id: string;
+       title: string;
+     }
+     "
+    `);
   });
 });

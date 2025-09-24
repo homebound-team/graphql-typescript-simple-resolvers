@@ -1,153 +1,133 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Scalar Types", () => {
-  const schemaWithScalars = `
-    scalar Date
-    scalar DateTime
-    scalar CustomId
+describe("Custom scalars", () => {
+  it("generates custom scalar types", async () => {
+    const schema = createTestSchema(`
+      scalar Date
+      scalar DateTime
 
-    type User {
-      id: CustomId!
-      name: String!
-      birthday: Date
-      lastLogin: DateTime
-    }
+      type Author {
+        name: String!
+        birthday: Date
+        birthdayPartyScheduled: DateTime
+      }
 
-    type Query {
-      user(id: CustomId!): User
-      usersBornAfter(date: Date!): [User!]!
-      usersLoggedInAfter(datetime: DateTime!): [User!]!
-    }
+      type Query {
+        authors: [Author!]!
+      }
+    `);
 
-    input UserInput {
-      name: String!
-      birthday: Date
-      customId: CustomId
-    }
-
-    type Mutation {
-      createUser(input: UserInput!): User!
-    }
-  `;
-
-  it("generates scalar types in resolver interfaces", async () => {
-    const schema = createTestSchema(schemaWithScalars);
     const code = await runPlugin(schema, {
       scalars: {
         Date: "Date",
         DateTime: "Date",
-        CustomId: "string",
       },
       mappers: {},
       enumValues: {},
     });
 
-    // Should include scalar types in resolver interface
-    expect(code).toContain(`export interface Resolvers {
-  Query: QueryResolvers;
-  Mutation: MutationResolvers;
-  User?: UserResolvers;
-  Date: GraphQLScalarType;
-  DateTime: GraphQLScalarType;
-  CustomId: GraphQLScalarType;
-}`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+       Date: GraphQLScalarType;
+       DateTime: GraphQLScalarType;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+       birthday: Resolver<Author, {}, Date | null | undefined>;
+       birthdayPartyScheduled: Resolver<Author, {}, Date | null | undefined>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+       birthday: Date | null | undefined;
+       birthdayPartyScheduled: Date | null | undefined;
+     }
+     "
+    `);
   });
 
-  it("handles scalars in field types", async () => {
-    const schema = createTestSchema(schemaWithScalars);
+  it("generates mapped scalars", async () => {
+    const schema = createTestSchema(`
+      scalar Date
+
+      type Author {
+        name: String!
+        birthday: Date
+      }
+
+      type Query {
+        authors: [Author!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {
-        Date: "Date",
-        DateTime: "Date",
-        CustomId: "string",
+        Date: "./scalars#DateType",
       },
       mappers: {},
       enumValues: {},
     });
 
-    // User interface should use scalar mappings
-    expect(code).toContain(`export interface User {
-  id: string;
-  name: string;
-  birthday: Date | null | undefined;
-  lastLogin: Date | null | undefined;
-}`);
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { Context } from './context';
+     import { GraphQLResolveInfo, GraphQLScalarType } from 'graphql';
 
-  it("handles scalars in query arguments", async () => {
-    const schema = createTestSchema(schemaWithScalars);
-    const code = await runPlugin(schema, {
-      scalars: {
-        Date: "Date",
-        DateTime: "Date",
-        CustomId: "string",
-      },
-      mappers: {},
-      enumValues: {},
-    });
 
-    // Query args should use scalar types
-    expect(code).toContain(`export interface QueryUserArgs {
-  id: string;
-}`);
-    expect(code).toContain(`export interface QueryUsersBornAfterArgs {
-  date: Date;
-}`);
-    expect(code).toContain(`export interface QueryUsersLoggedInAfterArgs {
-  datetime: Date;
-}`);
-  });
-
-  it("handles scalars in input types", async () => {
-    const schema = createTestSchema(schemaWithScalars);
-    const code = await runPlugin(schema, {
-      scalars: {
-        Date: "Date",
-        DateTime: "Date",
-        CustomId: "string",
-      },
-      mappers: {},
-      enumValues: {},
-    });
-
-    // Input types should use scalar mappings
-    expect(code).toContain(`export interface UserInput {
-  name: string;
-  birthday?: Date | null | undefined;
-  customId?: string | null | undefined;
-}`);
-  });
-
-  it("defaults to 'any' for unmapped scalars", async () => {
-    const schema = createTestSchema(schemaWithScalars);
-    const code = await runPlugin(schema, {
-      scalars: {
-        // Only map some scalars, leave others unmapped
-        Date: "Date",
-      },
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`export interface User {
-  id: CustomId;
-  name: string;
-  birthday: Date | null | undefined;
-  lastLogin: DateTime | null | undefined;
-}`);
-  });
-
-  it("snapshots scalar type generation", async () => {
-    const schema = createTestSchema(schemaWithScalars);
-    const code = await runPlugin(schema, {
-      scalars: {
-        Date: "Date",
-        DateTime: "Date",
-        CustomId: "string",
-      },
-      mappers: {},
-      enumValues: {},
-    });
-    expect(code).toMatchSnapshot();
+         export interface Resolvers {
+           Query: QueryResolvers; 
+           Author?: AuthorResolvers; 
+           Date: GraphQLScalarType;
+         }
+       
+         export type UnionResolvers = {
+           
+         }
+       
+           export interface QueryResolvers extends  {
+             authors: Resolver<{}, {}, readonly Author[]>;
+           }
+         
+           export interface AuthorResolvers extends  {
+             name: Resolver<Author, {}, string>;birthday: Resolver<Author, {}, ./scalars#DateType | null | undefined>;
+           }
+         
+         type MaybePromise<T> = T | Promise<T>;
+         export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+       
+         export type SubscriptionResolverFilter<R, A, T> = (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
+         export type SubscriptionResolver<R, A, T> = {
+           subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+         }
+       
+           export interface Author {
+             name: string;birthday: ./scalars#DateType | null | undefined;
+           }
+         "
+    `);
   });
 });

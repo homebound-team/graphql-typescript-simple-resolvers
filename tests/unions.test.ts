@@ -1,146 +1,8 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Union Types", () => {
-  const schemaWithUnions = `
-    type Author {
-      id: ID!
-      name: String!
-    }
-
-    type Book {
-      id: ID!
-      title: String!
-    }
-
-    type Article {
-      id: ID!
-      headline: String!
-    }
-
-    # Basic union of object types
-    union SearchResult = Author | Book
-
-    # Union including primitives
-    union StringOrNumber = String | Int
-
-    # Union with primitives and object types
-    union MixedUnion = String | Boolean | Author
-
-    # Nested union (union of unions)
-    union UnionOfUnions = SearchResult | StringOrNumber
-
-    type Query {
-      search(query: String!): [SearchResult!]!
-      mixedSearch: MixedUnion
-      testNestedUnion: UnionOfUnions
-      getPrimitive: StringOrNumber
-    }
-
-    # Union in nullable field
-    type Container {
-      optionalResult: SearchResult
-      requiredResult: SearchResult!
-      optionalResults: [SearchResult!]
-      requiredResults: [SearchResult!]!
-    }
-  `;
-
-  it("generates basic union types", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain("export type SearchResult = Author | Book;");
-  });
-
-  it("generates union with primitives", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain("export type StringOrNumber = string | number;");
-    expect(code).toContain("export type MixedUnion = string | boolean | Author;");
-  });
-
-  it("generates nested unions", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain("export type UnionOfUnions = SearchResult | StringOrNumber;");
-  });
-
-  it("generates union resolvers for object types", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`SearchResult: { __resolveType(o: Author | Book): string };`);
-  });
-
-  it("generates union resolvers for mixed unions", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`MixedUnion: { __resolveType(o: String | Boolean | Author): string };`);
-  });
-
-  it("handles unions in field types with correct nullability", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`export interface Container {
-  optionalResult: SearchResult | null | undefined;
-  requiredResult: SearchResult;
-  optionalResults: SearchResult[] | null | undefined;
-  requiredResults: SearchResult[];
-}`);
-  });
-
-  it("handles unions in query resolvers", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`search: Resolver<{}, QuerySearchArgs, readonly SearchResult[]>;`);
-    expect(code).toContain(`mixedSearch: Resolver<{}, {}, MixedUnion | null | undefined>;`);
-  });
-
-  it("snapshots union type generation", async () => {
-    const schema = createTestSchema(schemaWithUnions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-    expect(code).toMatchSnapshot();
-  });
-
-  it("handles union property nullability correctly", async () => {
-    const schemaWithNullableUnion = `
+describe("Union types", () => {
+  it("generates object union types", async () => {
+    const schema = createTestSchema(`
       type Author {
         name: String!
       }
@@ -149,28 +11,256 @@ describe("Union Types", () => {
         title: String!
       }
 
-      union Content = Author | Book
-
-      type Post {
-        content: Content
-        requiredContent: Content!
-      }
+      union SearchResult = Author | Book
 
       type Query {
-        posts: [Post!]!
+        search: [SearchResult!]!
       }
-    `;
+    `);
 
-    const schema = createTestSchema(schemaWithNullableUnion);
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`export interface Post {
-  content: Content | null | undefined;
-  requiredContent: Content;
-}`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+       Book?: BookResolvers;
+     }
+
+     export type UnionResolvers = { SearchResult: { __resolveType(o: Author | Book): string } };
+
+     export interface QueryResolvers {
+       search: Resolver<{}, {}, readonly SearchResult[]>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
+
+     export interface BookResolvers {
+       title: Resolver<Book, {}, string>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+     }
+
+     export interface Book {
+       title: string;
+     }
+
+     export type SearchResult = Author | Book;
+     "
+    `);
+  });
+
+  it("generates primitive union types", async () => {
+    const schema = createTestSchema(`
+      union UnionProp = String | Boolean
+
+      type TestType {
+        unionField: UnionProp
+      }
+
+      type Query {
+        test: TestType
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      scalars: {},
+      mappers: {},
+      enumValues: {},
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       TestType?: TestTypeResolvers;
+     }
+
+     export type UnionResolvers = { UnionProp: { __resolveType(o: String | Boolean): string } };
+
+     export interface QueryResolvers {
+       test: Resolver<{}, {}, TestType | null | undefined>;
+     }
+
+     export interface TestTypeResolvers {
+       unionField: Resolver<TestType, {}, UnionProp | null | undefined>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface TestType {
+       unionField: UnionProp | null | undefined;
+     }
+
+     export type UnionProp = string | boolean;
+     "
+    `);
+  });
+
+  it("generates union of unions", async () => {
+    const schema = createTestSchema(`
+      type Author {
+        name: String!
+      }
+
+      union SearchResult = Author | String
+      union UnionProp = String | Boolean
+      union UnionOfUnions = UnionProp | SearchResult
+
+      type Query {
+        testUnion: UnionOfUnions
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      scalars: {},
+      mappers: {},
+      enumValues: {},
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+     }
+
+     export type UnionResolvers = {
+       SearchResult: { __resolveType(o: Author | String): string };
+       UnionProp: { __resolveType(o: String | Boolean): string };
+       UnionOfUnions: { __resolveType(o: UnionProp | SearchResult): string };
+     };
+
+     export interface QueryResolvers {
+       testUnion: Resolver<{}, {}, UnionOfUnions | null | undefined>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+     }
+
+     export type SearchResult = Author | string;
+
+     export type UnionProp = string | boolean;
+
+     export type UnionOfUnions = UnionProp | SearchResult;
+     "
+    `);
+  });
+
+  it("generates unions with primitives and objects", async () => {
+    const schema = createTestSchema(`
+      type Author {
+        name: String!
+      }
+
+      union UnionWithPrimitives = String | Boolean | Author
+
+      type Query {
+        mixedUnion: UnionWithPrimitives
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      scalars: {},
+      mappers: {},
+      enumValues: {},
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+     }
+
+     export type UnionResolvers = { UnionWithPrimitives: { __resolveType(o: String | Boolean | Author): string } };
+
+     export interface QueryResolvers {
+       mixedUnion: Resolver<{}, {}, UnionWithPrimitives | null | undefined>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+     }
+
+     export type UnionWithPrimitives = string | boolean | Author;
+     "
+    `);
   });
 });

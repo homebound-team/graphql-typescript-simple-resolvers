@@ -1,207 +1,264 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Input Types & Arguments", () => {
-  const schemaWithInputs = `
-    scalar Date
-    scalar DateTime
+describe("Input types", () => {
+  it("generates input type interfaces", async () => {
+    const schema = createTestSchema(`
+      input AuthorInput {
+        name: String
+        bookIds: [ID!]
+        bookIds2: [ID]
+      }
 
-    enum Status {
-      ACTIVE
-      INACTIVE
-      PENDING
-    }
+      type Author {
+        name: String!
+      }
 
-    input AddressInput {
-      street: String!
-      city: String!
-      state: String
-      zipCode: String
-      country: String!
-    }
+      type Mutation {
+        saveAuthor(input: AuthorInput!): Author!
+      }
 
-    input UserInput {
-      name: String!
-      email: String!
-      age: Int
-      birthday: Date
-      status: Status
-      isActive: Boolean
-      address: AddressInput
-      tags: [String!]
-      optionalTags: [String]
-      permissions: [String!]!
-      metadata: [String]!
-    }
+      type Query {
+        authors: [Author!]!
+      }
+    `);
 
-    input UpdateUserInput {
-      name: String
-      email: String
-      age: Int
-      status: Status
-    }
-
-    input SearchFilters {
-      minAge: Int
-      maxAge: Int
-      statuses: [Status!]
-      isActive: Boolean
-    }
-
-    type User {
-      id: ID!
-      name: String!
-      email: String!
-      age: Int
-      birthday: Date
-      status: Status
-    }
-
-    type Query {
-      # Scalar arguments
-      user(id: ID!): User
-      userByEmail(email: String!): User
-
-      # Optional arguments
-      users(limit: Int, offset: Int): [User!]!
-
-      # Input type arguments
-      searchUsers(filters: SearchFilters): [User!]!
-      getUsersInRange(minAge: Int!, maxAge: Int!): [User!]!
-
-      # Array arguments
-      usersByIds(ids: [ID!]!): [User!]!
-      usersByOptionalIds(ids: [ID]): [User!]!
-    }
-
-    type Mutation {
-      createUser(input: UserInput!): User!
-      updateUser(id: ID!, input: UpdateUserInput!): User!
-
-      # Multiple arguments including inputs
-      createUserWithAddress(
-        userInput: UserInput!
-        addressInput: AddressInput!
-        sendWelcomeEmail: Boolean
-      ): User!
-    }
-  `;
-
-  it("generates input types with proper nullability", async () => {
-    const schema = createTestSchema(schemaWithInputs);
-    const code = await runPlugin(schema, {
-      scalars: { Date: "Date", DateTime: "Date" },
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`export interface UserInput {
-  name: string;
-  email: string;
-  age?: number | null | undefined;
-  birthday?: Date | null | undefined;
-  status?: Status | null | undefined;
-  isActive?: boolean | null | undefined;
-  address?: AddressInput | null | undefined;
-  tags?: string[] | null | undefined;
-  optionalTags?: Array<string | null | undefined> | null | undefined;
-  permissions: string[];
-  metadata: Array<string | null | undefined>;
-}`);
-  });
-
-  it("generates nested input types", async () => {
-    const schema = createTestSchema(schemaWithInputs);
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`export interface AddressInput {
-  street: string;
-  city: string;
-  state?: string | null | undefined;
-  zipCode?: string | null | undefined;
-  country: string;
-}`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Mutation: MutationResolvers;
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface MutationResolvers {
+       saveAuthor: Resolver<{}, MutationSaveAuthorArgs, Author>;
+     }
+
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface MutationSaveAuthorArgs {
+       input: AuthorInput;
+     }
+     export interface Author {
+       name: string;
+     }
+
+     export interface AuthorInput {
+       name?: string | null | undefined;
+       bookIds?: string[] | null | undefined;
+       bookIds2?: Array<string | null | undefined> | null | undefined;
+     }
+     "
+    `);
   });
 
-  it("generates query resolvers with scalar arguments", async () => {
-    const schema = createTestSchema(schemaWithInputs);
+  it("generates input types with arrays", async () => {
+    const schema = createTestSchema(`
+      input BookInput {
+        title: String!
+        authorIds: [ID!]!
+        optionalAuthorIds: [ID!]
+        tags: [String]!
+        optionalTags: [String]
+      }
+
+      type Book {
+        title: String!
+      }
+
+      type Mutation {
+        createBook(input: BookInput!): Book!
+      }
+
+      type Query {
+        books: [Book!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`user: Resolver<{}, QueryUserArgs, User | null | undefined>;`);
-    expect(code).toContain(`userByEmail: Resolver<{}, QueryUserByEmailArgs, User | null | undefined>;`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+
+     export interface Resolvers {
+       Mutation: MutationResolvers;
+       Query: QueryResolvers;
+       Book?: BookResolvers;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface MutationResolvers {
+       createBook: Resolver<{}, MutationCreateBookArgs, Book>;
+     }
+
+     export interface QueryResolvers {
+       books: Resolver<{}, {}, readonly Book[]>;
+     }
+
+     export interface BookResolvers {
+       title: Resolver<Book, {}, string>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface MutationCreateBookArgs {
+       input: BookInput;
+     }
+     export interface Book {
+       title: string;
+     }
+
+     export interface BookInput {
+       title: string;
+       authorIds: string[];
+       optionalAuthorIds?: string[] | null | undefined;
+       tags: Array<string | null | undefined>;
+       optionalTags?: Array<string | null | undefined> | null | undefined;
+     }
+     "
+    `);
   });
 
-  it("generates query resolvers with optional arguments", async () => {
-    const schema = createTestSchema(schemaWithInputs);
+  it("generates mutation argument types from inputs", async () => {
+    const schema = createTestSchema(`
+      input AuthorInput {
+        name: String!
+        bio: String
+      }
+
+      type Author {
+        name: String!
+      }
+
+      type SaveAuthorResult {
+        author: Author!
+      }
+
+      type Mutation {
+        saveAuthor(input: AuthorInput!): SaveAuthorResult!
+        updateAuthor(id: ID!, input: AuthorInput!): Author!
+      }
+
+      type Query {
+        authors: [Author!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`users: Resolver<{}, QueryUsersArgs, readonly User[]>;`);
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
 
-  it("generates query resolvers with array arguments", async () => {
-    const schema = createTestSchema(schemaWithInputs);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface Resolvers {
+       Mutation: MutationResolvers;
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+       SaveAuthorResult?: SaveAuthorResultResolvers;
+     }
 
-    expect(code).toContain(`usersByIds: Resolver<{}, QueryUsersByIdsArgs, readonly User[]>;`);
-    expect(code).toContain(`usersByOptionalIds: Resolver<{}, QueryUsersByOptionalIdsArgs, readonly User[]>;`);
-  });
+     export type UnionResolvers = {};
 
-  it("generates mutation resolvers with input arguments", async () => {
-    const schema = createTestSchema(schemaWithInputs);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface MutationResolvers {
+       saveAuthor: Resolver<{}, MutationSaveAuthorArgs, SaveAuthorResult>;
+       updateAuthor: Resolver<{}, MutationUpdateAuthorArgs, Author>;
+     }
 
-    expect(code).toContain(`createUser: Resolver<{}, MutationCreateUserArgs, User>;`);
-    expect(code).toContain(`updateUser: Resolver<{}, MutationUpdateUserArgs, User>;`);
-  });
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
 
-  it("generates argument type definitions", async () => {
-    const schema = createTestSchema(schemaWithInputs);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
 
-    expect(code).toContain(`export interface QueryUserArgs {
-  id: string;
-}`);
+     export interface SaveAuthorResultResolvers {
+       author: Resolver<SaveAuthorResult, {}, Author>;
+     }
 
-    expect(code).toContain(`export interface QueryUsersArgs {
-  limit?: number | null | undefined;
-  offset?: number | null | undefined;
-}`);
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
 
-    expect(code).toContain(`export interface MutationCreateUserArgs {
-  input: UserInput;
-}`);
-  });
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
 
-  it("snapshots input type generation", async () => {
-    const schema = createTestSchema(schemaWithInputs);
-    const code = await runPlugin(schema, {
-      scalars: { Date: "Date", DateTime: "Date" },
-      mappers: {},
-      enumValues: {},
-    });
-    expect(code).toMatchSnapshot();
+     export interface MutationSaveAuthorArgs {
+       input: AuthorInput;
+     }
+     export interface MutationUpdateAuthorArgs {
+       id: string;
+       input: AuthorInput;
+     }
+     export interface Author {
+       name: string;
+     }
+
+     export interface SaveAuthorResult {
+       author: Author;
+     }
+
+     export interface AuthorInput {
+       name: string;
+       bio?: string | null | undefined;
+     }
+     "
+    `);
   });
 });

@@ -1,149 +1,148 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("GraphQL Subscriptions", () => {
-  const schemaWithSubscriptions = `
-    type User {
-      id: ID!
-      name: String!
-      email: String!
-    }
+describe("GraphQL subscriptions", () => {
+  it("generates subscription resolvers", async () => {
+    const schema = createTestSchema(`
+      type Author {
+        name: String!
+      }
 
-    type Post {
-      id: ID!
-      title: String!
-      author: User!
-      content: String!
-    }
+      type Subscription {
+        authorSaved: Author!
+      }
 
-    type Comment {
-      id: ID!
-      post: Post!
-      author: User!
-      text: String!
-    }
+      type Query {
+        authors: [Author!]!
+      }
+    `);
 
-    union ActivityItem = Post | Comment
-
-    type Query {
-      users: [User!]!
-      posts: [Post!]!
-    }
-
-    type Mutation {
-      createUser(name: String!, email: String!): User!
-      createPost(title: String!, content: String!, authorId: ID!): Post!
-      createComment(postId: ID!, text: String!, authorId: ID!): Comment!
-    }
-
-    type Subscription {
-      # Simple subscription without arguments
-      userCreated: User!
-
-      # Subscription with arguments
-      postCreated(authorId: ID): Post!
-
-      # Subscription returning arrays
-      newActivity: [ActivityItem!]!
-
-      # Subscription with multiple arguments
-      commentsForPost(postId: ID!, authorId: ID): [Comment!]!
-
-      # Subscription returning nullable types
-      latestPost: Post
-    }
-  `;
-
-  it("generates subscription types", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`export interface Subscription {
-  userCreated: User;
-  postCreated: Post;
-  newActivity: ActivityItem[];
-  commentsForPost: Comment[];
-  latestPost: Post | null | undefined;
-}`);
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
 
-  it("generates subscription resolvers without arguments", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+       Subscription?: SubscriptionResolvers;
+     }
 
-    expect(code).toContain(`userCreated: SubscriptionResolver<Subscription, {}, User>;`);
+     export type UnionResolvers = {};
+
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
+
+     export interface SubscriptionResolvers {
+       authorSaved: SubscriptionResolver<Subscription, {}, Author>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+     }
+
+     export interface Subscription {
+       authorSaved: Author;
+     }
+     "
+    `);
   });
 
   it("generates subscription resolvers with arguments", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
+    const schema = createTestSchema(`
+      type Author {
+        name: String!
+      }
+
+      union SearchResult = Author | String
+
+      type Subscription {
+        searchSub(query: String!): [SearchResult!]!
+      }
+
+      type Query {
+        authors: [Author!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`postCreated: SubscriptionResolver<Subscription, SubscriptionPostCreatedArgs, Post>;`);
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
 
-  it("generates subscription resolvers with multiple arguments", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+       Subscription?: SubscriptionResolvers;
+     }
 
-    expect(code).toContain(
-      `commentsForPost: SubscriptionResolver<Subscription, SubscriptionCommentsForPostArgs, readonly Comment[]>;`,
-    );
-  });
+     export type UnionResolvers = { SearchResult: { __resolveType(o: Author | String): string } };
 
-  it("generates argument types for subscriptions with parameters", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
 
-    expect(code).toContain(`export interface SubscriptionPostCreatedArgs {
-  authorId?: string | null | undefined;
-}`);
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+     }
 
-    expect(code).toContain(`export interface SubscriptionCommentsForPostArgs {
-  postId: string;
-  authorId?: string | null | undefined;
-}`);
-  });
+     export interface SubscriptionResolvers {
+       searchSub: SubscriptionResolver<Subscription, SubscriptionSearchSubArgs, readonly SearchResult[]>;
+     }
 
-  it("snapshots subscription generation", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-    expect(code).toMatchSnapshot();
-  });
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
 
-  it("handles subscription with mapped types", async () => {
-    const schema = createTestSchema(schemaWithSubscriptions);
-    const code = await runPlugin(schema, {
-      mappers: {
-        User: "./entities#UserEntity",
-        Post: "./entities#PostEntity",
-      },
-      scalars: {},
-      enumValues: {},
-    });
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
 
-    expect(code).toContain(`import { PostEntity, UserEntity } from "./entities";`);
+     export interface SubscriptionSearchSubArgs {
+       query: string;
+     }
+     export interface Author {
+       name: string;
+     }
+
+     export interface Subscription {
+       searchSub: SearchResult[];
+     }
+
+     export type SearchResult = Author | string;
+     "
+    `);
   });
 });

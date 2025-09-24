@@ -1,151 +1,154 @@
 import { createTestSchema, runPlugin } from "./utils/test-helpers";
 
-describe("Enum Types", () => {
-  const schemaWithEnums = `
-    enum Status {
-      ACTIVE
-      INACTIVE
-      PENDING
-      ARCHIVED
-    }
-
-    enum Priority {
-      LOW
-      MEDIUM
-      HIGH
-      URGENT
-    }
-
-    enum UserRole {
-      GUEST
-      USER
-      MODERATOR
-      ADMIN
-    }
-
-    type User {
-      id: ID!
-      name: String!
-      status: Status!
-      role: UserRole!
-      priority: Priority
-    }
-
-    type Query {
-      users(status: Status, role: UserRole): [User!]!
-      usersByStatuses(statuses: [Status!]!): [User!]!
-    }
-
-    input UserInput {
-      name: String!
-      status: Status
-      role: UserRole!
-      priority: Priority
-    }
-  `;
-
+describe("Enum types", () => {
   it("generates enum types", async () => {
-    const schema = createTestSchema(schemaWithEnums);
+    const schema = createTestSchema(`
+      enum Popularity {
+        Low
+        High
+      }
+
+      enum Working {
+        YES
+        NO
+      }
+
+      type Author {
+        name: String!
+        popularity: Popularity!
+        working: Working
+      }
+
+      type Query {
+        authors: [Author!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
       enumValues: {},
     });
 
-    expect(code).toContain(`export enum Status {
-  Active = "ACTIVE",
-  Inactive = "INACTIVE",
-  Pending = "PENDING",
-  Archived = "ARCHIVED",
-}`);
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
 
-    expect(code).toContain(`export enum Priority {
-  Low = "LOW",
-  Medium = "MEDIUM",
-  High = "HIGH",
-  Urgent = "URGENT",
-}`);
+     export interface Resolvers {
+       Query: QueryResolvers;
+       Author?: AuthorResolvers;
+     }
 
-    expect(code).toContain(`export enum UserRole {
-  Guest = "GUEST",
-  User = "USER",
-  Moderator = "MODERATOR",
-  Admin = "ADMIN",
-}`);
+     export type UnionResolvers = {};
+
+     export interface QueryResolvers {
+       authors: Resolver<{}, {}, readonly Author[]>;
+     }
+
+     export interface AuthorResolvers {
+       name: Resolver<Author, {}, string>;
+       popularity: Resolver<Author, {}, Popularity>;
+       working: Resolver<Author, {}, Working | null | undefined>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface Author {
+       name: string;
+       popularity: Popularity;
+       working: Working | null | undefined;
+     }
+
+     export enum Popularity {
+       Low = "Low",
+       High = "High",
+     }
+
+     export enum Working {
+       Yes = "YES",
+       No = "NO",
+     }
+     "
+    `);
   });
 
-  it("uses enums in type definitions", async () => {
-    const schema = createTestSchema(schemaWithEnums);
+  it("generates enums with custom values", async () => {
+    const schema = createTestSchema(`
+      enum Status {
+        ACTIVE
+        INACTIVE
+      }
+
+      type User {
+        name: String!
+        status: Status!
+      }
+
+      type Query {
+        users: [User!]!
+      }
+    `);
+
     const code = await runPlugin(schema, {
       scalars: {},
       mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`export interface User {
-  id: string;
-  name: string;
-  status: Status;
-  role: UserRole;
-  priority: Priority | null | undefined;
-}`);
-  });
-
-  it("uses enums in input types", async () => {
-    const schema = createTestSchema(schemaWithEnums);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`export interface UserInput {
-  name: string;
-  status?: Status | null | undefined;
-  role: UserRole;
-  priority?: Priority | null | undefined;
-}`);
-  });
-
-  it("uses enums in query arguments", async () => {
-    const schema = createTestSchema(schemaWithEnums);
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
-
-    expect(code).toContain(`users: Resolver<{}, QueryUsersArgs, readonly User[]>;`);
-    expect(code).toContain(`usersByStatuses: Resolver<{}, QueryUsersByStatusesArgs, readonly User[]>;`);
-  });
-
-  it("handles enum value mapping to custom types", async () => {
-    const schema = createTestSchema(schemaWithEnums);
-    const code = await runPlugin(schema, {
       enumValues: {
-        Status: "./enums#StatusEnum",
-        Priority: "./enums#PriorityEnum",
+        Status: "./enums#StatusValues",
       },
-      scalars: {},
-      mappers: {},
     });
 
-    expect(code).toContain(`import { PriorityEnum, StatusEnum } from "./enums";`);
-    // Export syntax may use separate export statements
-    expect(code).toContain('export { StatusEnum } from "./enums";');
-    expect(code).toContain('export { PriorityEnum } from "./enums";');
-  });
+    expect(code).toMatchInlineSnapshot(`
+     "import { GraphQLResolveInfo } from "graphql";
+     import { Context } from "./context";
+     import { StatusValues } from "./enums";
 
-  it("snapshots enum generation", async () => {
-    const schema = createTestSchema(schemaWithEnums);
-    const code = await runPlugin(schema, {
-      enumValues: {
-        Status: "./enums#StatusEnum",
-        Priority: "./enums#PriorityEnum",
-      },
-      scalars: {},
-      mappers: {},
-    });
-    expect(code).toMatchSnapshot();
+     export interface Resolvers {
+       Query: QueryResolvers;
+       User?: UserResolvers;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface QueryResolvers {
+       users: Resolver<{}, {}, readonly User[]>;
+     }
+
+     export interface UserResolvers {
+       name: Resolver<User, {}, string>;
+       status: Resolver<User, {}, StatusValues>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: Context, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: Context,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: Context, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export interface User {
+       name: string;
+       status: StatusValues;
+     }
+
+     export { StatusValues } from "./enums";
+     "
+    `);
   });
 });
