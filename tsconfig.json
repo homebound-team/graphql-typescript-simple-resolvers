@@ -6,8 +6,8 @@
     "strict": true,
     "esModuleInterop": false,
     "skipLibCheck": true,
-    "outDir": "build"
+    "outDir": "build",
+    "types": ["jest", "node"]
   },
-  "includes": ["src"],
-  "exclude":["integration"]
+  "include": ["src", "tests"]
 }

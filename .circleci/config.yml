@@ -1,7 +1,12 @@
 version: 2.1
 
 orbs:
-  node: circleci/node@5.1.0
+  node: circleci/node@7.1.1
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:22.19.0
 
 workflows:
   version: 2
@@ -10,13 +15,16 @@ workflows:
       - build:
           context:
             - npm-readonly
-            - github
+      - test:
+          context:
+            - npm-readonly
       - publish:
           context:
             - npm-publish
             - github
           requires:
             - build
+            - test
           filters:
             branches:
               only:
@@ -34,16 +42,21 @@ commands:
 
 jobs:
   build:
-    docker:
-      - image: cimg/node:20.9.0
+    executor: node
     working_directory: ~/project
     steps:
       - bootstrap
       - run: yarn build
 
+  test:
+    executor: node
+    working_directory: ~/project
+    steps:
+      - bootstrap
+      - run: yarn test
+
   publish:
-    docker:
-      - image: cimg/node:20.9.0
+    executor: node
     working_directory: ~/project
     steps:
       - bootstrap
