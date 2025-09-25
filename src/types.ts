@@ -11,6 +11,7 @@ import {
   GraphQLScalarType,
   GraphQLUnionType,
 } from "graphql";
+import { parseMapper, isExternalMapperType } from "@graphql-codegen/visitor-plugin-common";
 import { Code, code, imp } from "ts-poet";
 import { Config } from "./index";
 
@@ -62,7 +63,7 @@ export function mapObjectType(config: Config, type: GraphQLNamedType): any {
   if (isQueryOrMutationType(type)) {
     return "{}";
   }
-  return toImp(config.mappers[type.name]) || type.name;
+  return toImp(config.mappers[type.name], type.name) || type.name;
 }
 
 export function mapInterfaceType(
@@ -84,10 +85,10 @@ export function mapInterfaceType(
 }
 
 function mapEnumType(config: Config, type: GraphQLEnumType): any {
-  return toImp(config.enumValues[type.name]) || type.name;
+  return toImp(config.enumValues[type.name], type.name) || type.name;
 }
 
-function mapScalarType(config: Config, type: GraphQLScalarType): string {
+function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
   if (type.name === "String" || type.name === "ID") {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
@@ -95,17 +96,50 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string {
   } else if (type.name === "Boolean") {
     return "boolean";
   } else {
-    return config.scalars[type.name] || type.name.toString();
+    return (toImp(config.scalars[type.name], type.name) as string | Code) || type.name.toString();
   }
 }
 
-// Maps the graphql-code-generation convention of `@src/context#Context` to ts-poet's `Context@@src/context`.
-export function toImp(spec: string | undefined): unknown {
+/**
+ * Parses a mapper specification and returns structured information about external mappers.
+ * Supports both traditional format (path#symbol) and subpath imports (#src/path#symbol).
+ */
+export function parseExternalMapper(spec: string): {
+  isExternal: boolean;
+  isDefault: boolean;
+  import: string;
+  source: string | undefined;
+  type: string;
+} {
+  const parsed = parseMapper(spec);
+  const isExternal = isExternalMapperType(parsed);
+
+  return {
+    isExternal,
+    isDefault: isExternal ? parsed.default : false,
+    import: isExternal ? parsed.import : spec,
+    source: isExternal ? parsed.source : undefined,
+    type: parsed.type,
+  };
+}
+
+// Maps the visit-plugin convention (e.g., `@src/context#Context` or `\\#src/context#Context` for subpath imports) to ts-poet's format.
+export function toImp(spec: string | undefined, typeName?: string): unknown {
   if (!spec) {
     return undefined;
   }
-  const [path, symbol] = spec.split("#");
-  return imp(`${symbol}@${path}`);
+  const mapper = parseExternalMapper(spec);
+  if (mapper.isExternal) {
+    // For default imports, use ts-poet = syntax with the type name as the import alias
+    if (mapper.isDefault && typeName) {
+      return imp(`${typeName}=${mapper.source}`);
+    }
+    // For named imports, use the import element (which may include 'as' aliasing)
+    return imp(`${mapper.import}@${mapper.source}`);
+  } else {
+    // Internal mapper, just return the type as-is
+    return mapper.type;
+  }
 }
 
 export function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {

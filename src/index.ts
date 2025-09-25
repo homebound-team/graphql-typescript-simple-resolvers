@@ -26,6 +26,7 @@ import {
   joinCodes,
   mapObjectType,
   mapType,
+  parseExternalMapper,
   toImp,
 } from "./types";
 import "@homebound/activesupport";
@@ -117,10 +118,10 @@ function generateTopLevelResolversType(
     export interface Resolvers {
       ${typesThatNeedResolvers.map((o) => {
         return `${o.name}: ${o.name}Resolvers;`;
-      })} 
+      })}
       ${typesThatMayHaveResolvers.map((o) => {
         return `${o.name}?: ${o.name}Resolvers;`;
-      })} 
+      })}
       ${scalars
         .filter((s) => !builtInScalarsImps.includes(s.name))
         .map((s) => {
@@ -316,10 +317,18 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
           }
        `);
       } else {
-        const [path, symbol] = mappedEnum.split("#");
-        chunks.push(code`
-          export { ${symbol} } from "${path}";
-        `);
+        const mapper = parseExternalMapper(mappedEnum);
+        if (mapper.isExternal) {
+          if (mapper.isDefault) {
+            chunks.push(code`
+              export { default as ${type.name} } from "${mapper.source}";
+            `);
+          } else {
+            chunks.push(code`
+              export { ${mapper.import} } from "${mapper.source}";
+            `);
+          }
+        }
       }
     });
 }
