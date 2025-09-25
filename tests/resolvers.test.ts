@@ -298,49 +298,62 @@ describe("Query and mutation resolvers", () => {
     });
 
     expect(code).toMatchInlineSnapshot(`
-     "import { AppContext } from '#src/context';
-     import { GraphQLResolveInfo, GraphQLScalarType } from 'graphql';
-     import { UserEntity, ProductEntity } from '#src/entities';
-     import { StatusEnum } from '#lib/enums';
-     import { null } from '#lib/scalars';
-     import { MoneyType } from '#lib/types';
-     import { null as null1 } from '#src/constants';
+     "import { StatusEnum } from "#lib/enums";
+     import DateTime from "#lib/scalars";
+     import { MoneyType } from "#lib/types";
+     import Priority from "#src/constants";
+     import { AppContext } from "#src/context";
+     import { ProductEntity, UserEntity } from "#src/entities";
+     import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
+     export interface Resolvers {
+       User: UserResolvers;
+       Product: ProductResolvers;
+       Query: QueryResolvers;
 
-         export interface Resolvers {
-           User: UserResolvers;Product: ProductResolvers;Query: QueryResolvers;
+       DateTime: GraphQLScalarType;
+       Money: GraphQLScalarType;
+     }
 
-           DateTime: GraphQLScalarType;Money: GraphQLScalarType;
-         }
+     export type UnionResolvers = {};
 
-         export type UnionResolvers = {
+     export interface UserResolvers {
+       id: Resolver<UserEntity, {}, string>;
+       name: Resolver<UserEntity, {}, string>;
+       createdAt: Resolver<UserEntity, {}, DateTime | null | undefined>;
+       balance: Resolver<UserEntity, {}, MoneyType | null | undefined>;
+       status: Resolver<UserEntity, {}, StatusEnum>;
+       priority: Resolver<UserEntity, {}, Priority | null | undefined>;
+     }
 
-         }
+     export interface ProductResolvers {
+       id: Resolver<ProductEntity, {}, string>;
+       name: Resolver<ProductEntity, {}, string>;
+       owner: Resolver<ProductEntity, {}, UserEntity>;
+     }
 
-           export interface UserResolvers extends  {
-             id: Resolver<UserEntity, {}, string>;name: Resolver<UserEntity, {}, string>;createdAt: Resolver<UserEntity, {}, null | null | undefined>;balance: Resolver<UserEntity, {}, MoneyType | null | undefined>;status: Resolver<UserEntity, {}, StatusEnum>;priority: Resolver<UserEntity, {}, null1 | null | undefined>;
-           }
+     export interface QueryResolvers {
+       users: Resolver<{}, {}, readonly UserEntity[]>;
+       products: Resolver<{}, {}, readonly ProductEntity[]>;
+     }
 
-           export interface ProductResolvers extends  {
-             id: Resolver<ProductEntity, {}, string>;name: Resolver<ProductEntity, {}, string>;owner: Resolver<ProductEntity, {}, UserEntity>;
-           }
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: AppContext, info: GraphQLResolveInfo) => MaybePromise<T>;
 
-           export interface QueryResolvers extends  {
-             users: Resolver<{}, {}, readonly UserEntity[]>;products: Resolver<{}, {}, readonly ProductEntity[]>;
-           }
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: AppContext,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
 
-         type MaybePromise<T> = T | Promise<T>;
-         export type Resolver<R, A, T> = (root: R, args: A, ctx: AppContext, info: GraphQLResolveInfo) => MaybePromise<T>;
+     export { StatusEnum } from "#lib/enums";
 
-         export type SubscriptionResolverFilter<R, A, T> = (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
-         export type SubscriptionResolver<R, A, T> = {
-           subscribe: (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => AsyncIterator<T>;
-         }
-
-                   export { StatusEnum } from "#lib/enums";
-
-                   export { default as Priority } from "#src/constants";
-                 "
+     export { default as Priority } from "#src/constants";
+     "
     `);
   });
 });

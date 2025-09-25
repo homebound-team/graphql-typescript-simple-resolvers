@@ -63,7 +63,7 @@ export function mapObjectType(config: Config, type: GraphQLNamedType): any {
   if (isQueryOrMutationType(type)) {
     return "{}";
   }
-  return toImp(config.mappers[type.name]) || type.name;
+  return toImp(config.mappers[type.name], type.name) || type.name;
 }
 
 export function mapInterfaceType(
@@ -85,7 +85,7 @@ export function mapInterfaceType(
 }
 
 function mapEnumType(config: Config, type: GraphQLEnumType): any {
-  return toImp(config.enumValues[type.name]) || type.name;
+  return toImp(config.enumValues[type.name], type.name) || type.name;
 }
 
 function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
@@ -96,7 +96,7 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
   } else if (type.name === "Boolean") {
     return "boolean";
   } else {
-    return (toImp(config.scalars[type.name]) as string | Code) || type.name.toString();
+    return (toImp(config.scalars[type.name], type.name) as string | Code) || type.name.toString();
   }
 }
 
@@ -124,15 +124,15 @@ export function parseExternalMapper(spec: string): {
 }
 
 // Maps the graphql-code-generation convention of `@src/context#Context` to ts-poet's `Context@@src/context`.
-export function toImp(spec: string | undefined): unknown {
+export function toImp(spec: string | undefined, typeName?: string): unknown {
   if (!spec) {
     return undefined;
   }
   const mapper = parseExternalMapper(spec);
   if (mapper.isExternal) {
-    // For default imports, use just the type name
-    if (mapper.isDefault) {
-      return imp(`${mapper.type}@${mapper.source}`);
+    // For default imports, use ts-poet = syntax with the type name as the import alias
+    if (mapper.isDefault && typeName) {
+      return imp(`${typeName}=${mapper.source}`);
     }
     // For named imports, use the import element (which may include 'as' aliasing)
     return imp(`${mapper.import}@${mapper.source}`);
