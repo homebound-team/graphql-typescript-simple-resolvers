@@ -22,8 +22,6 @@ describe("Mapped types", () => {
         Author: "./entities#AuthorEntity",
         Book: "./entities#BookEntity",
       },
-      scalars: {},
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`

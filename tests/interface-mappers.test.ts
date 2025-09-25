@@ -21,11 +21,9 @@ describe("Interface as mapped type", () => {
     `);
 
     const code = await runPlugin(schema, {
-      scalars: {},
       mappers: {
         Publisher: "./entities#PublisherEntity",
       },
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`
@@ -105,12 +103,10 @@ describe("Interface as mapped type", () => {
     `);
 
     const code = await runPlugin(schema, {
-      scalars: {},
       mappers: {
         Node: "./entities#NodeEntity",
         User: "./entities#UserEntity",
       },
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`

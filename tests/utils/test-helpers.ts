@@ -11,14 +11,17 @@ export function createTestSchema(sdl: string): GraphQLSchema {
 /**
  * Test helper to run the plugin with a given schema and config
  */
-export async function runPlugin(
-  schema: GraphQLSchema,
-  config: Omit<Config, "contextType"> & { contextType?: string },
-): Promise<string> {
-  const fullConfig: Config = {
+export async function runPlugin(schema: GraphQLSchema, configOverrides: Partial<Config> = {}): Promise<string> {
+  const defaultConfig = {
     contextType: "./context#Context",
-    ...config,
+    scalars: {},
+    mappers: {},
+    enumValues: {},
   };
-  const result = await plugin(schema, [], fullConfig);
+  const config = {
+    ...defaultConfig,
+    ...configOverrides,
+  };
+  const result = await plugin(schema, [], config);
   return typeof result === "string" ? result : (result as any).content;
 }

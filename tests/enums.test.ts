@@ -24,11 +24,7 @@ describe("Enum types", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";
@@ -101,8 +97,6 @@ describe("Enum types", () => {
     `);
 
     const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
       enumValues: {
         Status: "./enums#StatusValues",
       },

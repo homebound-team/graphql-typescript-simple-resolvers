@@ -22,8 +22,6 @@ describe("Custom scalars", () => {
         Date: "Date",
         DateTime: "Date",
       },
-      mappers: {},
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`
@@ -89,8 +87,6 @@ describe("Custom scalars", () => {
       scalars: {
         Date: "./scalars#DateType",
       },
-      mappers: {},
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`

@@ -13,11 +13,7 @@ describe("Query and mutation resolvers", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";
@@ -88,11 +84,7 @@ describe("Query and mutation resolvers", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";
@@ -169,11 +161,7 @@ describe("Query and mutation resolvers", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";

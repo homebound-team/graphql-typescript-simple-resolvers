@@ -18,11 +18,7 @@ describe("Union resolver helpers", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";
@@ -94,12 +90,10 @@ describe("Union resolver helpers", () => {
     `);
 
     const code = await runPlugin(schema, {
-      scalars: {},
       mappers: {
         User: "./entities#UserEntity",
         Post: "./entities#PostEntity",
       },
-      enumValues: {},
     });
 
     expect(code).toMatchInlineSnapshot(`
@@ -170,11 +164,7 @@ describe("Union resolver helpers", () => {
       }
     `);
 
-    const code = await runPlugin(schema, {
-      scalars: {},
-      mappers: {},
-      enumValues: {},
-    });
+    const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
      "import { GraphQLResolveInfo } from "graphql";
