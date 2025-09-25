@@ -244,4 +244,103 @@ describe("Query and mutation resolvers", () => {
      "
     `);
   });
+
+  it("supports subpath imports for all configuration options", async () => {
+    const schema = createTestSchema(`
+      scalar DateTime
+      scalar Money
+
+      enum Status {
+        ACTIVE
+        INACTIVE
+      }
+
+      enum Priority {
+        LOW
+        HIGH
+      }
+
+      type User {
+        id: ID!
+        name: String!
+        createdAt: DateTime
+        balance: Money
+        status: Status!
+        priority: Priority
+      }
+
+      type Product {
+        id: ID!
+        name: String!
+        owner: User!
+      }
+
+      type Query {
+        users: [User!]!
+        products: [Product!]!
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      contextType: "\\#src/context#AppContext",
+      scalars: {
+        DateTime: "\\#lib/scalars#default",
+        Money: "\\#lib/types#MoneyType",
+      },
+      mappers: {
+        User: "\\#src/entities#UserEntity",
+        Product: "\\#src/entities#ProductEntity",
+      },
+      enumValues: {
+        Status: "\\#lib/enums#StatusEnum",
+        Priority: "\\#src/constants#default",
+      },
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { AppContext } from '#src/context';
+     import { GraphQLResolveInfo, GraphQLScalarType } from 'graphql';
+     import { UserEntity, ProductEntity } from '#src/entities';
+     import { StatusEnum } from '#lib/enums';
+     import { null } from '#lib/scalars';
+     import { MoneyType } from '#lib/types';
+     import { null as null1 } from '#src/constants';
+
+
+         export interface Resolvers {
+           User: UserResolvers;Product: ProductResolvers;Query: QueryResolvers;
+
+           DateTime: GraphQLScalarType;Money: GraphQLScalarType;
+         }
+
+         export type UnionResolvers = {
+
+         }
+
+           export interface UserResolvers extends  {
+             id: Resolver<UserEntity, {}, string>;name: Resolver<UserEntity, {}, string>;createdAt: Resolver<UserEntity, {}, null | null | undefined>;balance: Resolver<UserEntity, {}, MoneyType | null | undefined>;status: Resolver<UserEntity, {}, StatusEnum>;priority: Resolver<UserEntity, {}, null1 | null | undefined>;
+           }
+
+           export interface ProductResolvers extends  {
+             id: Resolver<ProductEntity, {}, string>;name: Resolver<ProductEntity, {}, string>;owner: Resolver<ProductEntity, {}, UserEntity>;
+           }
+
+           export interface QueryResolvers extends  {
+             users: Resolver<{}, {}, readonly UserEntity[]>;products: Resolver<{}, {}, readonly ProductEntity[]>;
+           }
+
+         type MaybePromise<T> = T | Promise<T>;
+         export type Resolver<R, A, T> = (root: R, args: A, ctx: AppContext, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+         export type SubscriptionResolverFilter<R, A, T> = (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
+         export type SubscriptionResolver<R, A, T> = {
+           subscribe: (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => AsyncIterator<T>;
+         }
+
+                   export { StatusEnum } from "#lib/enums";
+
+                   export { default as Priority } from "#src/constants";
+                 "
+    `);
+  });
 });
