@@ -11,3 +11,6 @@
 /yarn.lock
 /package.json.bak
 /tsconfig.json
+/.husky
+/.prettierrc.js
+/jest.config.js
