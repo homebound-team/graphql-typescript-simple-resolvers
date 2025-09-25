@@ -108,7 +108,7 @@ export function parseExternalMapper(spec: string): {
   isExternal: boolean;
   isDefault: boolean;
   import: string;
-  source: string;
+  source: string | undefined;
   type: string;
 } {
   const parsed = parseMapper(spec);
@@ -118,12 +118,12 @@ export function parseExternalMapper(spec: string): {
     isExternal,
     isDefault: isExternal ? parsed.default : false,
     import: isExternal ? parsed.import : spec,
-    source: isExternal ? parsed.source : "",
+    source: isExternal ? parsed.source : undefined,
     type: parsed.type,
   };
 }
 
-// Maps the graphql-code-generation convention of `@src/context#Context` to ts-poet's `Context@@src/context`.
+// Maps the visit-plugin convention (e.g., `@src/context#Context` or `\\#src/context#Context` for subpath imports) to ts-poet's format.
 export function toImp(spec: string | undefined, typeName?: string): unknown {
   if (!spec) {
     return undefined;
