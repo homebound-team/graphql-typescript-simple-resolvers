@@ -6,14 +6,13 @@
   "packageManager": "yarn@4.10.2",
   "scripts": {
     "build": "rm -rf build; tsc",
-    "prepack": "yarn build",
+    "prepack": " pinst --disable && yarn build",
+    "postpack": "pinst --enable",
     "test": "jest",
     "coverage": "jest --collectCoverage",
     "format": "prettier --write 'src/**/*.{ts,js,tsx,jsx}'",
     "graphql-codegen": "rm integration/graphql-types.ts; graphql-codegen --config integration/graphql-codegen.yml",
-    "postinstall": "husky",
-    "prepublishOnly": "pinst --disable",
-    "postpublish": "pinst --enable"
+    "postinstall": "husky"
   },
   "dependencies": {
     "@graphql-codegen/plugin-helpers": "^6.0.0",
