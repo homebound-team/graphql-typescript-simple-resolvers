@@ -31,6 +31,7 @@ import {
 } from "./types";
 import "@homebound/activesupport";
 import PluginOutput = Types.PluginOutput;
+import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
@@ -361,15 +362,16 @@ function optionalResolver(config: Config, t: GraphQLObjectType): boolean {
 }
 
 /** The config values we read from the graphql-codegen.yml file. */
-export type Config = {
+export interface Config extends RawConfig {
   contextType: string;
   scalars: Record<string, string>;
   mappers: Record<string, string>;
   enumValues: Record<string, string>;
-};
+}
 
 const defaultConfig: Omit<Config, "contextType"> = {
   scalars: {},
   mappers: {},
   enumValues: {},
+  emitLegacyCommonJSImports: true, // Current upstream default
 };
