@@ -106,7 +106,7 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   generateUnionTypes(chunks, config, interfaceToImpls, schema);
 
   const content = code`${chunks}`.toString({
-    ...(config.emitLegacyCommonJSImports ? {} : { importExtensions: "js" }),
+    importExtensions: config.emitLegacyCommonJSImports ? false : "js",
   });
   return { content } as PluginOutput;
 };

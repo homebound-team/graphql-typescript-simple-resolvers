@@ -130,13 +130,16 @@ export function toImp(spec: string | undefined, typeName?: string): unknown {
   }
   const mapper = parseExternalMapper(spec);
   if (mapper.isExternal) {
+    // Add .ts extension to the source path so ts-poet can transform it based on importExtensions setting
+    const sourceWithExt = `${mapper.source}.ts`;
     // For default imports, use ts-poet = syntax with the type name as the import alias
     if (mapper.isDefault && typeName) {
-      return imp(`${typeName}=${mapper.source}`);
+      return imp(`${typeName}=${sourceWithExt}`);
     }
     // For named imports, use the import element (which may include 'as' aliasing)
-    return imp(`${mapper.import}@${mapper.source}`);
+    return imp(`${mapper.import}@${sourceWithExt}`);
   } else {
+    // TODO: do I need this `else` at all?
     // Internal mapper, just return the type as-is
     return mapper.type;
   }

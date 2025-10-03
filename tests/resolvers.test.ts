@@ -412,12 +412,12 @@ describe("Query and mutation resolvers", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import { type GraphQLResolveInfo, GraphQLScalarType } from "graphql";
-     import { StatusEnum } from "./lib/enums";
-     import DateTime from "./lib/scalars";
-     import { MoneyType } from "./lib/types";
-     import Priority from "./src/constants";
-     import { AppContext } from "./src/context";
-     import { ProductEntity, UserEntity } from "./src/entities/index";
+     import { StatusEnum } from "./lib/enums.js";
+     import DateTime from "./lib/scalars.js";
+     import { MoneyType } from "./lib/types.js";
+     import Priority from "./src/constants.js";
+     import { AppContext } from "./src/context.js";
+     import { ProductEntity, UserEntity } from "./src/entities/index.js";
 
      export interface Resolvers {
        User: UserResolvers;
