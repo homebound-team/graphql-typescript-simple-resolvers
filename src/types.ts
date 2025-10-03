@@ -88,7 +88,7 @@ function mapEnumType(config: Config, type: GraphQLEnumType): any {
   return toImp(config.enumValues[type.name], { typeName: type.name }) || type.name;
 }
 
-function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
+function mapScalarType(config: Config, type: GraphQLScalarType): string | Import {
   if (type.name === "String" || type.name === "ID") {
     return "string";
   } else if (type.name === "Int" || type.name === "Float") {
@@ -96,7 +96,7 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
   } else if (type.name === "Boolean") {
     return "boolean";
   } else {
-    return (toImp(config.scalars[type.name], { typeName: type.name }) as string | Code) || type.name.toString();
+    return toImp(config.scalars[type.name], { typeName: type.name }) || type.name.toString();
   }
 }
 
