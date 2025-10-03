@@ -41,7 +41,7 @@ describe("Array handling", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
      import { AuthorEntity, BookEntity } from "./entities";
 
      export interface Resolvers {

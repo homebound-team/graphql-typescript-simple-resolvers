@@ -20,7 +20,7 @@ describe("Primitive type handling", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;
@@ -86,7 +86,7 @@ describe("Primitive type handling", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;
@@ -154,7 +154,7 @@ describe("Primitive type handling", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;

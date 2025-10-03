@@ -43,7 +43,7 @@ describe("Enum types", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
      import { StatusValues } from "./enums";
 
      export interface Resolvers {

@@ -12,7 +12,7 @@ import {
   GraphQLUnionType,
 } from "graphql";
 import { parseMapper, isExternalMapperType } from "@graphql-codegen/visitor-plugin-common";
-import { Code, code, imp } from "ts-poet";
+import { Code, code, imp, type Import } from "ts-poet";
 import { Config } from "./index";
 
 /** Turns a generic `type` into a TS type, note that we detect non-nulls which means types are initially assumed nullable. */
@@ -127,7 +127,7 @@ export function parseExternalMapper(spec: string): {
 export function toImp(
   spec: string | undefined,
   options: { typeName?: string; isTypeOnlyImport?: boolean } = {},
-): unknown {
+): string | Import | undefined {
   if (!spec) {
     return undefined;
   }

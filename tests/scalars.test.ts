@@ -29,7 +29,7 @@ describe("Scalars", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import { type GraphQLResolveInfo, GraphQLScalarType } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
      import { CustomIdType } from "./scalars";
 
      export interface Resolvers {

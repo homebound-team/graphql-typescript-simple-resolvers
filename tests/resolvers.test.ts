@@ -41,7 +41,7 @@ describe("Query and mutation resolvers", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
      import { AuthorEntity, BookEntity } from "./entities";
 
      export interface Resolvers {
@@ -165,7 +165,7 @@ describe("Query and mutation resolvers", () => {
 
     expect(code).toMatchInlineSnapshot(`
      "import type { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     import type { Context } from "./context";
      import { PostEntity, UserEntity } from "./entities";
 
      export interface Resolvers {
@@ -302,7 +302,7 @@ describe("Query and mutation resolvers", () => {
      import DateTime from "#lib/scalars";
      import { MoneyType } from "#lib/types";
      import Priority from "#src/constants";
-     import { AppContext } from "#src/context";
+     import type { AppContext } from "#src/context";
      import { ProductEntity, UserEntity } from "#src/entities";
      import { type GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
@@ -416,7 +416,7 @@ describe("Query and mutation resolvers", () => {
      import DateTime from "./lib/scalars.js";
      import { MoneyType } from "./lib/types.js";
      import Priority from "./src/constants.js";
-     import { AppContext } from "./src/context.js";
+     import type { AppContext } from "./src/context.js";
      import { ProductEntity, UserEntity } from "./src/entities/index.js";
 
      export interface Resolvers {

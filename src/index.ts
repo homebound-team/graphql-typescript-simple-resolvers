@@ -198,7 +198,7 @@ function generateEachResolverType(
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   allTypesWithResolvers: GraphQLObjectType[],
 ): void {
-  const ctx = toImp(config.contextType);
+  const ctx = toImp(config.contextType, { isTypeOnlyImport: true });
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach((type) => {
     const root = mapObjectType(config, type);
