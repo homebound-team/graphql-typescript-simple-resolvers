@@ -139,7 +139,6 @@ export function toImp(spec: string | undefined, typeName?: string): unknown {
     // For named imports, use the import element (which may include 'as' aliasing)
     return imp(`${mapper.import}@${sourceWithExt}`);
   } else {
-    // TODO: do I need this `else` at all?
     // Internal mapper, just return the type as-is
     return mapper.type;
   }
