@@ -35,7 +35,7 @@ import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
-const GraphQLResolveInfoImp = imp("GraphQLResolveInfo@graphql");
+const GraphQLResolveInfoImp = imp("t:GraphQLResolveInfo@graphql");
 
 type TypeMap = ReturnType<GraphQLSchema["getTypeMap"]>;
 

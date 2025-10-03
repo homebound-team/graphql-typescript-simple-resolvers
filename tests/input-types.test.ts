@@ -45,7 +45,7 @@ describe("Input types", () => {
     const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
+     "import type { GraphQLResolveInfo } from "graphql";
      import { Context } from "./context";
 
      export interface Resolvers {
