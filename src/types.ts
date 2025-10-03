@@ -63,7 +63,7 @@ export function mapObjectType(config: Config, type: GraphQLNamedType): any {
   if (isQueryOrMutationType(type)) {
     return "{}";
   }
-  return toImp(config.mappers[type.name], type.name) || type.name;
+  return toImp(config.mappers[type.name], { typeName: type.name }) || type.name;
 }
 
 export function mapInterfaceType(
@@ -85,7 +85,7 @@ export function mapInterfaceType(
 }
 
 function mapEnumType(config: Config, type: GraphQLEnumType): any {
-  return toImp(config.enumValues[type.name], type.name) || type.name;
+  return toImp(config.enumValues[type.name], { typeName: type.name }) || type.name;
 }
 
 function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
@@ -96,7 +96,7 @@ function mapScalarType(config: Config, type: GraphQLScalarType): string | Code {
   } else if (type.name === "Boolean") {
     return "boolean";
   } else {
-    return (toImp(config.scalars[type.name], type.name) as string | Code) || type.name.toString();
+    return (toImp(config.scalars[type.name], { typeName: type.name }) as string | Code) || type.name.toString();
   }
 }
 
@@ -124,24 +124,33 @@ export function parseExternalMapper(spec: string): {
 }
 
 // Maps the visit-plugin convention (e.g., `@src/context#Context` or `\\#src/context#Context` for subpath imports) to ts-poet's format.
-export function toImp(spec: string | undefined, typeName?: string): unknown {
+export function toImp(
+  spec: string | undefined,
+  options: { typeName?: string; isTypeOnlyImport?: boolean } = {},
+): unknown {
   if (!spec) {
     return undefined;
   }
+
   const mapper = parseExternalMapper(spec);
-  if (mapper.isExternal) {
-    // Add .ts extension to the source path so ts-poet can transform it based on importExtensions setting
-    const sourceWithExt = `${mapper.source}.ts`;
-    // For default imports, use ts-poet = syntax with the type name as the import alias
-    if (mapper.isDefault && typeName) {
-      return imp(`${typeName}=${sourceWithExt}`);
-    }
-    // For named imports, use the import element (which may include 'as' aliasing)
-    return imp(`${mapper.import}@${sourceWithExt}`);
-  } else {
-    // Internal mapper, just return the type as-is
+
+  // Internal mapper, just return the type as-is
+  if (!mapper.isExternal) {
     return mapper.type;
   }
+
+  // For external mappers, build the import path
+  const { typeName, isTypeOnlyImport } = options;
+  const sourceWithExt = `${mapper.source}.ts`;
+  const typeOnlyPrefix = isTypeOnlyImport ? "t:" : "";
+
+  // For default imports, use ts-poet = syntax with the type name as the import alias
+  if (mapper.isDefault && typeName) {
+    return imp(`${typeOnlyPrefix}${typeName}=${sourceWithExt}`);
+  }
+
+  // For named imports, use the import element (which may include 'as' aliasing)
+  return imp(`${typeOnlyPrefix}${mapper.import}@${sourceWithExt}`);
 }
 
 export function isObjectType(t: GraphQLNamedType): t is GraphQLObjectType {
