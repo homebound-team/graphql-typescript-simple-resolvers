@@ -401,8 +401,8 @@ describe("Query and mutation resolvers", () => {
         Money: "./lib/types#MoneyType",
       },
       mappers: {
-        User: "./src/entities#UserEntity",
-        Product: "./src/entities#ProductEntity",
+        User: "./src/entities/index#UserEntity",
+        Product: "./src/entities/index#ProductEntity",
       },
       enumValues: {
         Status: "./lib/enums#StatusEnum",
@@ -417,7 +417,7 @@ describe("Query and mutation resolvers", () => {
      import { MoneyType } from "./lib/types";
      import Priority from "./src/constants";
      import { AppContext } from "./src/context";
-     import { ProductEntity, UserEntity } from "./src/entities";
+     import { ProductEntity, UserEntity } from "./src/entities/index";
 
      export interface Resolvers {
        User: UserResolvers;
