@@ -322,13 +322,14 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
       } else {
         const mapper = parseExternalMapper(mappedEnum);
         if (mapper.isExternal) {
+          const extension = config.emitLegacyCommonJSImports ? "" : ".js";
           if (mapper.isDefault) {
             chunks.push(code`
-              export { default as ${type.name} } from "${mapper.source}";
+              export { default as ${type.name} } from "${mapper.source}${extension}";
             `);
           } else {
             chunks.push(code`
-              export { ${mapper.import} } from "${mapper.source}";
+              export { ${mapper.import} } from "${mapper.source}${extension}";
             `);
           }
         }

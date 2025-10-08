@@ -463,9 +463,9 @@ describe("Query and mutation resolvers", () => {
        subscribe: (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => AsyncIterator<T>;
      };
 
-     export { StatusEnum } from "./lib/enums";
+     export { StatusEnum } from "./lib/enums.js";
 
-     export { default as Priority } from "./src/constants";
+     export { default as Priority } from "./src/constants.js";
      "
     `);
   });
