@@ -40,8 +40,8 @@ describe("Query and mutation resolvers", () => {
     });
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
      import { AuthorEntity, BookEntity } from "./entities";
 
      export interface Resolvers {
@@ -164,8 +164,8 @@ describe("Query and mutation resolvers", () => {
     });
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
      import { PostEntity, UserEntity } from "./entities";
 
      export interface Resolvers {
@@ -302,9 +302,9 @@ describe("Query and mutation resolvers", () => {
      import DateTime from "#lib/scalars";
      import { MoneyType } from "#lib/types";
      import Priority from "#src/constants";
-     import { AppContext } from "#src/context";
+     import type { AppContext } from "#src/context";
      import { ProductEntity, UserEntity } from "#src/entities";
-     import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+     import { type GraphQLResolveInfo, GraphQLScalarType } from "graphql";
 
      export interface Resolvers {
        User: UserResolvers;
@@ -353,6 +353,119 @@ describe("Query and mutation resolvers", () => {
      export { StatusEnum } from "#lib/enums";
 
      export { default as Priority } from "#src/constants";
+     "
+    `);
+  });
+
+  it("supports emitting ESM-compatible code", async () => {
+    const schema = createTestSchema(`
+      scalar DateTime
+      scalar Money
+
+      enum Status {
+        ACTIVE
+        INACTIVE
+      }
+
+      enum Priority {
+        LOW
+        HIGH
+      }
+
+      type User {
+        id: ID!
+        name: String!
+        createdAt: DateTime
+        balance: Money
+        status: Status!
+        priority: Priority
+      }
+
+      type Product {
+        id: ID!
+        name: String!
+        owner: User!
+      }
+
+      type Query {
+        users: [User!]!
+        products: [Product!]!
+      }
+    `);
+
+    const code = await runPlugin(schema, {
+      emitLegacyCommonJSImports: false, // This setting is to enable ESM-compatible code in graphql-codegen (https://the-guild.dev/graphql/codegen/docs/getting-started/esm-typescript-usage)
+      contextType: "./src/context#AppContext",
+      scalars: {
+        DateTime: "./lib/scalars#default",
+        Money: "./lib/types#MoneyType",
+      },
+      mappers: {
+        User: "./src/entities/index#UserEntity",
+        Product: "./src/entities/index#ProductEntity",
+      },
+      enumValues: {
+        Status: "./lib/enums#StatusEnum",
+        Priority: "./src/constants#default",
+      },
+    });
+
+    expect(code).toMatchInlineSnapshot(`
+     "import { type GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+     import { StatusEnum } from "./lib/enums.js";
+     import DateTime from "./lib/scalars.js";
+     import { MoneyType } from "./lib/types.js";
+     import Priority from "./src/constants.js";
+     import type { AppContext } from "./src/context.js";
+     import { ProductEntity, UserEntity } from "./src/entities/index.js";
+
+     export interface Resolvers {
+       User: UserResolvers;
+       Product: ProductResolvers;
+       Query: QueryResolvers;
+
+       DateTime: GraphQLScalarType;
+       Money: GraphQLScalarType;
+     }
+
+     export type UnionResolvers = {};
+
+     export interface UserResolvers {
+       id: Resolver<UserEntity, {}, string>;
+       name: Resolver<UserEntity, {}, string>;
+       createdAt: Resolver<UserEntity, {}, DateTime | null | undefined>;
+       balance: Resolver<UserEntity, {}, MoneyType | null | undefined>;
+       status: Resolver<UserEntity, {}, StatusEnum>;
+       priority: Resolver<UserEntity, {}, Priority | null | undefined>;
+     }
+
+     export interface ProductResolvers {
+       id: Resolver<ProductEntity, {}, string>;
+       name: Resolver<ProductEntity, {}, string>;
+       owner: Resolver<ProductEntity, {}, UserEntity>;
+     }
+
+     export interface QueryResolvers {
+       users: Resolver<{}, {}, readonly UserEntity[]>;
+       products: Resolver<{}, {}, readonly ProductEntity[]>;
+     }
+
+     type MaybePromise<T> = T | Promise<T>;
+     export type Resolver<R, A, T> = (root: R, args: A, ctx: AppContext, info: GraphQLResolveInfo) => MaybePromise<T>;
+
+     export type SubscriptionResolverFilter<R, A, T> = (
+       root: R | undefined,
+       args: A,
+       ctx: AppContext,
+       info: GraphQLResolveInfo,
+     ) => boolean | Promise<boolean>;
+     export type SubscriptionResolver<R, A, T> = {
+       subscribe: (root: R | undefined, args: A, ctx: AppContext, info: GraphQLResolveInfo) => AsyncIterator<T>;
+     };
+
+     export { StatusEnum } from "./lib/enums.js";
+
+     export { default as Priority } from "./src/constants.js";
      "
     `);
   });

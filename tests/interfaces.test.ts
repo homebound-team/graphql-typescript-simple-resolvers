@@ -70,8 +70,8 @@ describe("Interface support", () => {
     });
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
      import { NodeEntity, PublisherEntity, UserEntity } from "./entities";
 
      export interface Resolvers {

@@ -31,10 +31,11 @@ import {
 } from "./types";
 import "@homebound/activesupport";
 import PluginOutput = Types.PluginOutput;
+import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
 
 const builtInScalarsImps = ["Int", "Boolean", "String", "ID", "Float"];
 const GraphQLScalarTypeSymbolImp = imp("GraphQLScalarType@graphql");
-const GraphQLResolveInfoImp = imp("GraphQLResolveInfo@graphql");
+const GraphQLResolveInfoImp = imp("t:GraphQLResolveInfo@graphql");
 
 type TypeMap = ReturnType<GraphQLSchema["getTypeMap"]>;
 
@@ -104,7 +105,9 @@ export const plugin: PluginFunction<Config> = async (schema, documents, configFr
   // Union Types
   generateUnionTypes(chunks, config, interfaceToImpls, schema);
 
-  const content = await code`${chunks}`.toString();
+  const content = code`${chunks}`.toString({
+    importExtensions: config.emitLegacyCommonJSImports ? false : "js",
+  });
   return { content } as PluginOutput;
 };
 
@@ -195,7 +198,7 @@ function generateEachResolverType(
   interfaceToImpls: Map<GraphQLInterfaceType, GraphQLObjectType[]>,
   allTypesWithResolvers: GraphQLObjectType[],
 ): void {
-  const ctx = toImp(config.contextType);
+  const ctx = toImp(config.contextType, { isTypeOnlyImport: true });
   const argDefs: Code[] = [];
   allTypesWithResolvers.forEach((type) => {
     const root = mapObjectType(config, type);
@@ -319,13 +322,14 @@ function generateEnums(chunks: Code[], config: Config, schema: GraphQLSchema): v
       } else {
         const mapper = parseExternalMapper(mappedEnum);
         if (mapper.isExternal) {
+          const extension = config.emitLegacyCommonJSImports ? "" : ".js";
           if (mapper.isDefault) {
             chunks.push(code`
-              export { default as ${type.name} } from "${mapper.source}";
+              export { default as ${type.name} } from "${mapper.source}${extension}";
             `);
           } else {
             chunks.push(code`
-              export { ${mapper.import} } from "${mapper.source}";
+              export { ${mapper.import} } from "${mapper.source}${extension}";
             `);
           }
         }
@@ -361,15 +365,16 @@ function optionalResolver(config: Config, t: GraphQLObjectType): boolean {
 }
 
 /** The config values we read from the graphql-codegen.yml file. */
-export type Config = {
+export interface Config extends RawConfig {
   contextType: string;
   scalars: Record<string, string>;
   mappers: Record<string, string>;
   enumValues: Record<string, string>;
-};
+}
 
 const defaultConfig: Omit<Config, "contextType"> = {
   scalars: {},
   mappers: {},
   enumValues: {},
+  emitLegacyCommonJSImports: true, // Current upstream default
 };

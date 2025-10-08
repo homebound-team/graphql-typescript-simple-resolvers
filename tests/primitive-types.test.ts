@@ -19,8 +19,8 @@ describe("Primitive type handling", () => {
     const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;
@@ -85,8 +85,8 @@ describe("Primitive type handling", () => {
     const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;
@@ -153,8 +153,8 @@ describe("Primitive type handling", () => {
     const code = await runPlugin(schema);
 
     expect(code).toMatchInlineSnapshot(`
-     "import { GraphQLResolveInfo } from "graphql";
-     import { Context } from "./context";
+     "import type { GraphQLResolveInfo } from "graphql";
+     import type { Context } from "./context";
 
      export interface Resolvers {
        Query: QueryResolvers;
