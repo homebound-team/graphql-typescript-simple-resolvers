@@ -84,14 +84,14 @@ describe("Enum types", () => {
      };
 
      export interface Author {
-       name: string;
-       popularity: Popularity;
-       working: Working | null | undefined;
+       name: MaybePromise<string>;
+       popularity: MaybePromise<Popularity>;
+       working: MaybePromise<Working | null | undefined>;
      }
 
      export interface User {
-       name: string;
-       status: StatusValues;
+       name: MaybePromise<string>;
+       status: MaybePromise<StatusValues>;
      }
 
      export enum Popularity {

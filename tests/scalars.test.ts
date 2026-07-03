@@ -67,10 +67,10 @@ describe("Scalars", () => {
      };
 
      export interface Author {
-       name: string;
-       birthday: Date | null | undefined;
-       birthdayPartyScheduled: Date | null | undefined;
-       customId: CustomIdType | null | undefined;
+       name: MaybePromise<string>;
+       birthday: MaybePromise<Date | null | undefined>;
+       birthdayPartyScheduled: MaybePromise<Date | null | undefined>;
+       customId: MaybePromise<CustomIdType | null | undefined>;
      }
      "
     `);

@@ -81,15 +81,15 @@ describe("Union types", () => {
      };
 
      export interface Author {
-       name: string;
+       name: MaybePromise<string>;
      }
 
      export interface Book {
-       title: string;
+       title: MaybePromise<string>;
      }
 
      export interface TestType {
-       unionField: UnionProp | null | undefined;
+       unionField: MaybePromise<UnionProp | null | undefined>;
      }
 
      export type SearchResult = Author | Book;

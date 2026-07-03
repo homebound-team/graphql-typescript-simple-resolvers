@@ -85,23 +85,23 @@ describe("DTO types", () => {
      };
 
      export interface AuthorSummary {
-       numberOfBooks: number;
-       amountOfSales: number | null | undefined;
+       numberOfBooks: MaybePromise<number>;
+       amountOfSales: MaybePromise<number | null | undefined>;
      }
 
      export interface BookSummary {
-       title: string;
-       authorNames: string[];
-       optionalAuthorNames: string[] | null | undefined;
-       tagList: Array<string | null | undefined>;
-       optionalTagList: Array<string | null | undefined> | null | undefined;
+       title: MaybePromise<string>;
+       authorNames: MaybePromise<string[]>;
+       optionalAuthorNames: MaybePromise<string[] | null | undefined>;
+       tagList: MaybePromise<Array<string | null | undefined>>;
+       optionalTagList: MaybePromise<Array<string | null | undefined> | null | undefined>;
      }
 
      export interface Statistics {
-       totalUsers: number;
-       averageRating: number;
-       isActive: boolean;
-       lastUpdated: string | null | undefined;
+       totalUsers: MaybePromise<number>;
+       averageRating: MaybePromise<number>;
+       isActive: MaybePromise<boolean>;
+       lastUpdated: MaybePromise<string | null | undefined>;
      }
      "
     `);

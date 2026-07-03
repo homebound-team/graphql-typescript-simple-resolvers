@@ -173,38 +173,38 @@ describe("Interface support", () => {
        id: string;
      }
      export interface Author {
-       name: string;
-       bio: string | null | undefined;
-       field1: boolean | null | undefined;
+       name: MaybePromise<string>;
+       bio: MaybePromise<string | null | undefined>;
+       field1: MaybePromise<boolean | null | undefined>;
      }
 
      export interface Book {
-       name: string;
-       isbn: string | null | undefined;
+       name: MaybePromise<string>;
+       isbn: MaybePromise<string | null | undefined>;
      }
 
      export interface LargePublisher {
-       name: string | null | undefined;
+       name: MaybePromise<string | null | undefined>;
      }
 
      export interface Post {
-       id: string;
-       title: string;
+       id: MaybePromise<string>;
+       title: MaybePromise<string>;
      }
 
      export interface Container {
-       item: HasName | null | undefined;
-       requiredItem: HasName;
-       items: Array<HasName>;
-       publisher: PublisherEntity | null | undefined;
+       item: MaybePromise<HasName | null | undefined>;
+       requiredItem: MaybePromise<HasName>;
+       items: MaybePromise<Array<HasName>>;
+       publisher: MaybePromise<PublisherEntity | null | undefined>;
      }
 
      export interface HasName {
-       name: string;
+       name: MaybePromise<string>;
      }
 
      export interface FieldWithArgs {
-       field1: boolean | null | undefined;
+       field1: MaybePromise<boolean | null | undefined>;
      }
      "
     `);
