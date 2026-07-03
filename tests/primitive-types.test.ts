@@ -55,11 +55,11 @@ describe("Primitive type handling", () => {
      };
 
      export interface User {
-       id: string;
-       name: string;
-       age: number;
-       rating: number;
-       active: boolean;
+       id: MaybePromise<string>;
+       name: MaybePromise<string>;
+       age: MaybePromise<number>;
+       rating: MaybePromise<number>;
+       active: MaybePromise<boolean>;
      }
      "
     `);
@@ -124,7 +124,7 @@ describe("Primitive type handling", () => {
        active: boolean;
      }
      export interface User {
-       name: string;
+       name: MaybePromise<string>;
      }
      "
     `);
@@ -194,16 +194,16 @@ describe("Primitive type handling", () => {
      };
 
      export interface Statistics {
-       requiredString: string;
-       optionalString: string | null | undefined;
-       requiredInt: number;
-       optionalInt: number | null | undefined;
-       requiredFloat: number;
-       optionalFloat: number | null | undefined;
-       requiredBoolean: boolean;
-       optionalBoolean: boolean | null | undefined;
-       requiredId: string;
-       optionalId: string | null | undefined;
+       requiredString: MaybePromise<string>;
+       optionalString: MaybePromise<string | null | undefined>;
+       requiredInt: MaybePromise<number>;
+       optionalInt: MaybePromise<number | null | undefined>;
+       requiredFloat: MaybePromise<number>;
+       optionalFloat: MaybePromise<number | null | undefined>;
+       requiredBoolean: MaybePromise<boolean>;
+       optionalBoolean: MaybePromise<boolean | null | undefined>;
+       requiredId: MaybePromise<string>;
+       optionalId: MaybePromise<string | null | undefined>;
      }
      "
     `);

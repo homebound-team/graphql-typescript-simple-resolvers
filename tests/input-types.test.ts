@@ -105,15 +105,15 @@ describe("Input types", () => {
        input: BookInput;
      }
      export interface Author {
-       name: string;
+       name: MaybePromise<string>;
      }
 
      export interface Book {
-       title: string;
+       title: MaybePromise<string>;
      }
 
      export interface SaveAuthorResult {
-       author: Author;
+       author: MaybePromise<Author>;
      }
 
      export interface AuthorInput {

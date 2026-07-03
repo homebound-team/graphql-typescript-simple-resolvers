@@ -96,16 +96,16 @@ describe("Array handling", () => {
      };
 
      export interface TestType {
-       requiredArrayRequiredItems: string[];
-       optionalArrayRequiredItems: string[] | null | undefined;
-       requiredArrayOptionalItems: Array<string | null | undefined>;
-       optionalArrayOptionalItems: Array<string | null | undefined> | null | undefined;
+       requiredArrayRequiredItems: MaybePromise<string[]>;
+       optionalArrayRequiredItems: MaybePromise<string[] | null | undefined>;
+       requiredArrayOptionalItems: MaybePromise<Array<string | null | undefined>>;
+       optionalArrayOptionalItems: MaybePromise<Array<string | null | undefined> | null | undefined>;
      }
 
      export interface AuthorSummary {
-       numberOfBooks: number;
-       bookTitles: string[];
-       optionalTags: string[] | null | undefined;
+       numberOfBooks: MaybePromise<number>;
+       bookTitles: MaybePromise<string[]>;
+       optionalTags: MaybePromise<string[] | null | undefined>;
      }
      "
     `);

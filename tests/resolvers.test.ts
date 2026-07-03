@@ -111,7 +111,7 @@ describe("Query and mutation resolvers", () => {
        bio?: string | null | undefined;
      }
      export interface SaveAuthorResult {
-       author: AuthorEntity;
+       author: MaybePromise<AuthorEntity>;
      }
 
      export interface AuthorInput {
@@ -225,17 +225,17 @@ describe("Query and mutation resolvers", () => {
      };
 
      export interface Author {
-       name: string;
-       bio: string | null | undefined;
+       name: MaybePromise<string>;
+       bio: MaybePromise<string | null | undefined>;
      }
 
      export interface Book {
-       name: string;
-       isbn: string | null | undefined;
+       name: MaybePromise<string>;
+       isbn: MaybePromise<string | null | undefined>;
      }
 
      export interface HasName {
-       name: string;
+       name: MaybePromise<string>;
      }
 
      export type SearchResult = Author | Book;

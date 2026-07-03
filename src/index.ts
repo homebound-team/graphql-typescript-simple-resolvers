@@ -279,7 +279,8 @@ function generateDtosForNonMappedTypes(
     chunks.push(code`
       export interface ${type.name} {
         ${Object.values(type.getFields()).map((f) => {
-          return code`${f.name}: ${mapType(config, interfaceToImpls, f.type, true)};`;
+          // Wrap in MaybePromise so POJO fields can return promises, which the graphql-js runtime awaits.
+          return code`${f.name}: MaybePromise<${mapType(config, interfaceToImpls, f.type, true)}>;`;
         })}
       }
     `);

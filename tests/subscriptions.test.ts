@@ -63,12 +63,12 @@ describe("GraphQL subscriptions", () => {
        query: string;
      }
      export interface Author {
-       name: string;
+       name: MaybePromise<string>;
      }
 
      export interface Subscription {
-       authorSaved: Author;
-       searchSub: SearchResult[];
+       authorSaved: MaybePromise<Author>;
+       searchSub: MaybePromise<SearchResult[]>;
      }
 
      export type SearchResult = Author | string;
